@@ -66,19 +66,23 @@ public class Main {
 //        Term term6 = new Term("hi+_+");
 //        System.out.println(term6);
 
-//        Map<Set<Variable>, Float> map = new HashMap<>();
-//        try {
+        Map<Set<Variable>, Float> map = new HashMap<>();
+        try {
 //            Term term = new Term("3.5xy");
 //            Term term1 = new Term("3 . 1 5");
-//
-//            map.put(term1.getVariablesSet(), 1f);
-//            map.put(term.getVariablesSet(), 2f);
-//            System.out.println(map.get(term1.getVariablesSet()));
-//            System.out.println(map);
-//
-//        } catch (TermException err) {
-//            err.printStackTrace();
-//        }
+            Term constant3 = new Term("2");
+            Term term2 = new Term("xy");
+            Term term14 = new Term("2xy");
+
+            Term temp = term2.multiply(constant3);
+
+            System.out.println(temp.toString());
+            System.out.println(temp.equals(term14));
+
+
+        } catch (TermException err) {
+            err.printStackTrace();
+        }
 
 
 
@@ -88,21 +92,6 @@ public class Main {
 
 
 
-
-
-//        System.out.println(term2.toString());
-//        System.out.println(term6.toString());
-//        System.out.println(term2.equals(term6));
-
-//        Map<String, Integer> m1 = new HashMap<>();
-//        Map<String, Integer> m2 = new HashMap<>();
-//        m1.put("hi", 1);
-//        m1.put("ok", 2);
-//
-//        m2.put("ok", 2);
-//        m2.put("hi", 1);
-//
-//        System.out.println(m1.equals(m2));
 
     }
 }

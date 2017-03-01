@@ -33,9 +33,11 @@ public class Term {
 
     /* Return a Copy of given Term t*/
     public Term(Term t) {
-        this.variablesSet = t.getVariablesSet();
-        this.coefficient = t.getCoefficient();
-        this.baseToDegreeMap = t.getBaseToDegreeMap();
+        this.variablesSet = new HashSet<>();
+        variablesSet.addAll(t.getVariablesSet());
+        this.coefficient = new Float(t.getCoefficient());
+        this.baseToDegreeMap = new HashMap<>();
+        baseToDegreeMap.putAll(t.getBaseToDegreeMap());
     }
 
     private CoefficientAndBaseToDegreeMap getBaseToDegreeMap(String s) {
@@ -118,6 +120,7 @@ public class Term {
 
     public Term multiply(Term term_2) throws TermException {
         Term res = new Term(this);
+        res.setCoefficient(res.getCoefficient() * term_2.getCoefficient());
         Map<Character, Integer> res_map = res.getBaseToDegreeMap();
         Map<Character, Integer> target_map = term_2.getBaseToDegreeMap();
         for (Map.Entry<Character, Integer> entry : target_map.entrySet()) {
@@ -142,6 +145,7 @@ public class Term {
 
     public Term dividedBy(Term term_2) throws TermException {
         Term res = new Term(this);
+        res.setCoefficient(res.getCoefficient() / term_2.getCoefficient());
         Map<Character, Integer> res_map = res.getBaseToDegreeMap();
         Map<Character, Integer> target_map = term_2.getBaseToDegreeMap();
         for (Map.Entry<Character, Integer> entry : target_map.entrySet()) {
@@ -155,6 +159,10 @@ public class Term {
         res.variablesSet.clear();
         loadSetVariablesFromMap(res_map, res.variablesSet);
         return res;
+    }
+
+    public void divideByConstant(float num) {
+        this.coefficient /= num;
     }
 
     /* Check whether the given string s is valid */
