@@ -19,7 +19,8 @@ public class TermTest {
     Term term1, term2, term3,
             term4, term5, term6,
             term7, term8, term9,
-            term10, term11;
+            term10, term11, term12,
+            term13;
 
     @Before
     public void setUp() throws Exception {
@@ -40,6 +41,8 @@ public class TermTest {
         // for test Plus
         term10 = new Term("5.5xy");
         term11 = new Term("60xyz");
+        term12 = new Term("2xy3zxx");
+        term13 = new Term("6yx^3z");
     }
 
     @After
@@ -47,7 +50,8 @@ public class TermTest {
         term1 = term2 = term3 =
                 term4 = term5 = term6 =
                         term7 = term8 = term9 =
-                                term10 = term11 = null;
+                                term10 = term11 = term12 =
+                                        term13 = null;
     }
 
     @Test
@@ -59,6 +63,7 @@ public class TermTest {
         Assert.assertFalse(Term.isValidInput("-3.5x"));
         Assert.assertFalse(Term.isValidInput("x^(23)"));
         Assert.assertFalse(Term.isValidInput("x*y*z"));
+        Assert.assertTrue(Term.isValidInput("2xy3zxx"));
     }
 
 
@@ -69,6 +74,7 @@ public class TermTest {
         Assert.assertEquals(term3.getCoefficient(), 4.5f);
         Assert.assertEquals(term4.getCoefficient(), 1f);
         Assert.assertEquals(term5.getCoefficient(), 30f);
+        Assert.assertEquals(term12.getCoefficient(), 6f);
     }
 
 
@@ -94,16 +100,6 @@ public class TermTest {
     }
 
     @Test
-    public void testMultiply() throws Exception {
-
-    }
-
-    @Test
-    public void testDividedBy() throws Exception {
-
-    }
-
-    @Test
     public void testGetBaseToDegreeMap() throws Exception {
         Map<Character, Integer> m1 = new HashMap<>();
         m1.put('x', 2);
@@ -119,5 +115,16 @@ public class TermTest {
         Assert.assertFalse(term1.equals(term2));
         Assert.assertFalse(term1.equals(term8));
         Assert.assertFalse(term8.equals(term9));
+        Assert.assertTrue(term12.equals(term13));
+    }
+
+    @Test
+    public void testMultiply() throws Exception {
+
+    }
+
+    @Test
+    public void testDividedBy() throws Exception {
+
     }
 }

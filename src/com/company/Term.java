@@ -197,7 +197,7 @@ public class Term {
             if (power == null) {
                 this.base_to_degree_map.put(base, degree);
             } else {
-                this.base_to_degree_map.put(base, power * degree);
+                this.base_to_degree_map.put(base, power + degree);
             }
         }
 
