@@ -1,5 +1,7 @@
 package com.company;
 
+import com.company.Exceptions.TermException;
+
 import java.io.Console;
 import java.util.*;
 
@@ -59,10 +61,21 @@ public class Main {
 //        Term term = new Term("2x3y5z");
 //        System.out.println(term.getCoefficient());
 
-        Term term2 = new Term("3.5xyx^3");
-//        Term term6 = new Term("yx");
+//        Term term6 = new Term("hi+_+");
+//        System.out.println(term6);
 
-        System.out.println(term2.toString());
+        try {
+            Term term = new Term("3.5xy");
+            System.out.println(term.toString());
+            System.out.println(term.getCoefficient());
+            System.out.println(term.getBaseToDegreeMap());
+
+        } catch (TermException err) {
+            err.printStackTrace();
+        }
+
+
+
 
 
 //        System.out.println(term2.toString());

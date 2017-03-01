@@ -66,7 +66,7 @@ public class Equation {
                     end_cut_index = i;
                 }
             } else if (Equation.isMathOperator(c)) {
-                term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
+//                term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
                 System.out.println(term.toString());
             } else if (Equation.isOpenBracket(c)) {
 
