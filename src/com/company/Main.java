@@ -1,6 +1,8 @@
 package com.company;
 
 import com.company.Exceptions.TermException;
+import com.company.Exceptions.TermFormatException;
+import com.company.Tests.TermTest;
 
 import java.io.Console;
 import java.util.*;
@@ -64,15 +66,25 @@ public class Main {
 //        Term term6 = new Term("hi+_+");
 //        System.out.println(term6);
 
-        try {
-            Term term = new Term("3.5xy");
-            System.out.println(term.toString());
-            System.out.println(term.getCoefficient());
-            System.out.println(term.getBaseToDegreeMap());
+//        Map<Set<Variable>, Float> map = new HashMap<>();
+//        try {
+//            Term term = new Term("3.5xy");
+//            Term term1 = new Term("3 . 1 5");
+//
+//            map.put(term1.getVariablesSet(), 1f);
+//            map.put(term.getVariablesSet(), 2f);
+//            System.out.println(map.get(term1.getVariablesSet()));
+//            System.out.println(map);
+//
+//        } catch (TermException err) {
+//            err.printStackTrace();
+//        }
 
-        } catch (TermException err) {
-            err.printStackTrace();
-        }
+
+
+//        Set<Integer> gg = new HashSet<>();
+//        Set<Integer> no = new HashSet<>();
+//        System.out.println(gg.equals(no));
 
 
 

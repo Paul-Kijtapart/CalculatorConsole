@@ -54,7 +54,7 @@ public class Equation {
         Result result = new Result();
         Stack<Result> result_before_open_bracket_stack = new Stack<>();
         Term prev_term = null;
-        int prev_sign = 1;
+        char prev_sign = 1;
         char sign = '+';
         boolean isConstant = true;
         float number = 0f;
@@ -75,40 +75,36 @@ public class Equation {
                     end_cut_index = i;
                 }
             } else if (Equation.isMathOperator(c)) {
-                term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
-                switch (c) {
-                    case '+':
-                        result.addTerm(term);
-                        break;
-                    case '-':
-                        term.multiplyConstant(-1);
-                        result.addTerm(term);
-                        break;
-                    case '*':
-                        prev_term.multiplyConstant(prev_sign);
-                        result.removeTerm(prev_term);
-                        term.multiply(prev_term);
-                        result.addTerm(term);
-                        break;
-                    case '/':
-                        prev_term.multiplyConstant(prev_sign);
-                        result.removeTerm(prev_term);
-                        term.dividedBy(prev_term);
-                        result.addTerm(term);
-                        break;
+                if (start_cut_index != null && end_cut_index != null) {
+                    term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
+                    switch (c) {
+                        case '+':
+                            result.addTerm(term);
+                            break;
+                        case '-':
+                            term.multiplyConstant(-1);
+                            result.addTerm(term);
+                            break;
+                        case '*':
+                            prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
+                            result.removeTerm(prev_term);
+                            term.multiply(prev_term);
+                            result.addTerm(term);
+                            break;
+                        case '/':
+                            prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
+                            result.removeTerm(prev_term);
+                            term.dividedBy(prev_term);
+                            result.addTerm(term);
+                            break;
+                    }
                 }
                 prev_term = term;
                 prev_sign = sign;
-                isConstant = true;
                 sign = c;
                 term = null;
-            } else if (Equation.isOpenBracket(c)) {
-
-            } else if (Equation.isCloseBracket(c)) {
-
+                start_cut_index = end_cut_index = null;
             }
-
-
         }
 
         return null;

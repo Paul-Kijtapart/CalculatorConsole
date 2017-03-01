@@ -11,9 +11,9 @@ import java.util.regex.Pattern;
  * Created by aor on 2017-02-27.
  */
 public class Term {
-    private Set<Variable> variablesSet;
-    private Float coefficient;
-    private Map<Character, Integer> baseToDegreeMap;
+    protected Set<Variable> variablesSet;
+    protected Float coefficient;
+    protected Map<Character, Integer> baseToDegreeMap;
 
 
     public Term(String s) throws TermFormatException {
@@ -65,7 +65,6 @@ public class Term {
                     if (v.getDegree() == 0) {
                         v.setDegree(1);
                     }
-
                     res.putVariable(v.getBase(), v.getDegree());
                     v.setEmpty();
                 }
@@ -79,7 +78,9 @@ public class Term {
             }
         }
 
-        if (v.getBase() != null) {
+        if (res.hasEmptyBaseToDegreeMap() && current_coefficient > 1f) {
+            res.multiplyCoefficientBy(current_coefficient / precision);
+        } else if (v.getBase() != null) {
             if (v.getDegree() == 0) {
                 v.setDegree(1);
             }
@@ -115,7 +116,7 @@ public class Term {
         this.coefficient *= num;
     }
 
-    public Term multiply(Term term_2) throws TermException{
+    public Term multiply(Term term_2) throws TermException {
         Term res = new Term(this);
         Map<Character, Integer> res_map = res.getBaseToDegreeMap();
         Map<Character, Integer> target_map = term_2.getBaseToDegreeMap();
@@ -127,10 +128,19 @@ public class Term {
                 res_map.put(entry.getKey(), power + entry.getValue());
             }
         }
+        res.variablesSet.clear();
+        loadSetVariablesFromMap(res_map, res.variablesSet);
         return res;
     }
 
-    public Term dividedBy(Term term_2) throws  TermException{
+    private void loadSetVariablesFromMap(Map<Character, Integer> baseToDegreeMap, Set<Variable> res) {
+        for (Map.Entry<Character, Integer> entry : baseToDegreeMap.entrySet()) {
+            Variable v = new Variable(entry.getKey(), entry.getValue());
+            res.add(v);
+        }
+    }
+
+    public Term dividedBy(Term term_2) throws TermException {
         Term res = new Term(this);
         Map<Character, Integer> res_map = res.getBaseToDegreeMap();
         Map<Character, Integer> target_map = term_2.getBaseToDegreeMap();
@@ -142,6 +152,8 @@ public class Term {
                 res_map.put(entry.getKey(), power - entry.getValue());
             }
         }
+        res.variablesSet.clear();
+        loadSetVariablesFromMap(res_map, res.variablesSet);
         return res;
     }
 
@@ -159,13 +171,6 @@ public class Term {
         return (c == '.' || c == '^');
     }
 
-    @Override
-    public String toString() {
-        return "Term{ " + Float.toString(this.coefficient) +
-                " variablesSet=" + variablesSet +
-                '}';
-    }
-
     public Map<Character, Integer> getBaseToDegreeMap() {
         return baseToDegreeMap;
     }
@@ -180,6 +185,13 @@ public class Term {
 
     public void setCoefficient(Float coefficient) {
         this.coefficient = coefficient;
+    }
+
+    @Override
+    public String toString() {
+        return "Term{ " + Float.toString(this.coefficient) +
+                " variablesSet=" + variablesSet +
+                '}';
     }
 
     /* Store Coefficient and Map of Base to Degree of all variablesSet this Term contains */
@@ -199,6 +211,10 @@ public class Term {
             } else {
                 this.base_to_degree_map.put(base, power + degree);
             }
+        }
+
+        public boolean hasEmptyBaseToDegreeMap() {
+            return this.base_to_degree_map.isEmpty();
         }
 
         public void multiplyCoefficientBy(Float val) {

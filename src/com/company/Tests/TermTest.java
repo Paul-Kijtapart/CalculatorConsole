@@ -1,7 +1,6 @@
 package com.company.Tests;
 
 import com.company.Term;
-import com.sun.source.tree.AssertTree;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -9,8 +8,6 @@ import org.testng.Assert;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by aor on 2017-02-28.
@@ -20,7 +17,10 @@ public class TermTest {
             term4, term5, term6,
             term7, term8, term9,
             term10, term11, term12,
-            term13;
+            term13, term14, term15;
+
+    Term constant1, constant2, constant3,
+            constant4, constant5, constant6;
 
     @Before
     public void setUp() throws Exception {
@@ -43,6 +43,17 @@ public class TermTest {
         term11 = new Term("60xyz");
         term12 = new Term("2xy3zxx");
         term13 = new Term("6yx^3z");
+
+        // Constants multiply with term
+        term14 = new Term("2xy");
+
+        // Constants
+        constant1 = new Term("1 2 345");
+        constant2 = new Term("3. 4 5");
+        constant3 = new Term(("2"));
+        constant4 = new Term("6.9");
+        constant5 = new Term("12348.45");
+        constant6 = new Term("12348.45");
     }
 
     @After
@@ -51,7 +62,10 @@ public class TermTest {
                 term4 = term5 = term6 =
                         term7 = term8 = term9 =
                                 term10 = term11 = term12 =
-                                        term13 = null;
+                                        term13 = term14 = term15 =
+                                                null;
+        constant1 = constant2 = constant3 =
+                constant4 = constant5 = constant6 = null;
     }
 
     @Test
@@ -64,6 +78,22 @@ public class TermTest {
         Assert.assertFalse(Term.isValidInput("x^(23)"));
         Assert.assertFalse(Term.isValidInput("x*y*z"));
         Assert.assertTrue(Term.isValidInput("2xy3zxx"));
+
+        Assert.assertTrue(Term.isValidInput("1 2 345"));
+        Assert.assertTrue(Term.isValidInput("3. 4 5"));
+    }
+
+
+    @Test
+    public void testEquals() throws Exception {
+        Assert.assertFalse(term1.equals(term6), "Same Variable, Different Coefficient");
+        Assert.assertTrue(term5.equals(term7), "Input in different order");
+        Assert.assertFalse(term1.equals(term2));
+        Assert.assertFalse(term1.equals(term8));
+        Assert.assertFalse(term8.equals(term9));
+        Assert.assertTrue(term12.equals(term13));
+
+        Assert.assertTrue(constant5.equals(constant6));
     }
 
 
@@ -75,6 +105,10 @@ public class TermTest {
         Assert.assertEquals(term4.getCoefficient(), 1f);
         Assert.assertEquals(term5.getCoefficient(), 30f);
         Assert.assertEquals(term12.getCoefficient(), 6f);
+
+        Assert.assertEquals(constant1.getCoefficient(), 12345f);
+        Assert.assertEquals(constant2.getCoefficient(), 3.45f);;
+        Assert.assertEquals(constant5.getCoefficient(), 12348.45f);
     }
 
 
@@ -88,6 +122,9 @@ public class TermTest {
         Assert.assertEquals(term1.plus(term6), term3);
         Assert.assertEquals(term3.plus(term6), term10);
         Assert.assertEquals(term5.plus(term7), term11);
+
+        Assert.assertEquals(constant1.plus(constant2), constant5, "constant plus");
+        Assert.assertNull(constant1.plus(term1));
     }
 
     @Test
@@ -109,13 +146,15 @@ public class TermTest {
     }
 
     @Test
-    public void testEquals() throws Exception {
-        Assert.assertFalse(term1.equals(term6), "Same Variable, Different Coefficient");
-        Assert.assertTrue(term5.equals(term7), "Input in different order");
-        Assert.assertFalse(term1.equals(term2));
-        Assert.assertFalse(term1.equals(term8));
-        Assert.assertFalse(term8.equals(term9));
-        Assert.assertTrue(term12.equals(term13));
+    public void testMultiplyConstant() throws Exception {
+//        term2.multiplyConstant(2);
+//        Assert.assertEquals(term2, term14);
+//        term5.multiplyConstant(2);
+//        term7.multiplyConstant(2);
+//        Assert.assertEquals(term5, term11);
+//        Assert.assertEquals(term7, term11);
+
+        Assert.assertEquals(constant3.multiply(term6), term14);
     }
 
     @Test
