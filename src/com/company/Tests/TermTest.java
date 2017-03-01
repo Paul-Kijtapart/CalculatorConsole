@@ -78,7 +78,6 @@ public class TermTest {
         Assert.assertFalse(Term.isValidInput("x^(23)"));
         Assert.assertFalse(Term.isValidInput("x*y*z"));
         Assert.assertTrue(Term.isValidInput("2xy3zxx"));
-
         Assert.assertTrue(Term.isValidInput("1 2 345"));
         Assert.assertTrue(Term.isValidInput("3. 4 5"));
     }
@@ -92,7 +91,6 @@ public class TermTest {
         Assert.assertFalse(term1.equals(term8));
         Assert.assertFalse(term8.equals(term9));
         Assert.assertTrue(term12.equals(term13));
-
         Assert.assertTrue(constant5.equals(constant6));
     }
 
@@ -105,9 +103,9 @@ public class TermTest {
         Assert.assertEquals(term4.getCoefficient(), 1f);
         Assert.assertEquals(term5.getCoefficient(), 30f);
         Assert.assertEquals(term12.getCoefficient(), 6f);
-
         Assert.assertEquals(constant1.getCoefficient(), 12345f);
-        Assert.assertEquals(constant2.getCoefficient(), 3.45f);;
+        Assert.assertEquals(constant2.getCoefficient(), 3.45f);
+        ;
         Assert.assertEquals(constant5.getCoefficient(), 12348.45f);
     }
 
@@ -117,12 +115,10 @@ public class TermTest {
         Assert.assertNull(term1.plus(term4), "diff coefficient, dif vars");
         Assert.assertNotNull(term1.plus(term2), "diff coefficient, same vars");
         Assert.assertNull(term2.plus(term11), "same coefficient, different vars");
-
         Assert.assertEquals(term1.plus(term2), term3);
         Assert.assertEquals(term1.plus(term6), term3);
         Assert.assertEquals(term3.plus(term6), term10);
         Assert.assertEquals(term5.plus(term7), term11);
-
         Assert.assertEquals(constant1.plus(constant2), constant5, "constant plus");
         Assert.assertNull(constant1.plus(term1));
     }
@@ -131,11 +127,10 @@ public class TermTest {
     public void testMinus() throws Exception {
         Assert.assertEquals(term3.minus(term2), term1, "test cf: 4.5 -1 = 3.5");
         System.out.println(term3);
-
-//        Assert.assertNotNull(term2.minus(term1), "xy - yx = term with cf = 0");
-//        Assert.assertEquals(term2.minus(term6).getCoefficient(), 0f, " xy - yx = term with cf = 0");
-//        Assert.assertEquals(term6.minus(term1).getCoefficient(), -2.5f, "yx - 3.5xy = -2.5xy");
-//        Assert.assertEquals(term5.minus(term7).getCoefficient(), 0f);
+        Assert.assertNotNull(term2.minus(term1), "xy - yx = term with cf = 0");
+        Assert.assertEquals(term2.minus(term6).getCoefficient(), 0f, " xy - yx = term with cf = 0");
+        Assert.assertEquals(term6.minus(term1).getCoefficient(), -2.5f, "yx - 3.5xy = -2.5xy");
+        Assert.assertEquals(term5.minus(term7).getCoefficient(), 0f);
     }
 
     @Test

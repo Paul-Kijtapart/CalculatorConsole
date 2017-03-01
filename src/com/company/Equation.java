@@ -1,20 +1,27 @@
 package com.company;
 
 
+import com.company.Exceptions.EquationFormatException;
 import com.company.Exceptions.TermException;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by aor on 2017-02-27.
  */
 public class Equation {
-    private Map<Variable, Integer> canonicalForm;
+    private Map<Set<Variable>, Float> resultMap;
 
-    public Equation(String equation) {
+
+    public Equation(String equation) throws EquationFormatException, TermException {
+        if (!Equation.hasValidInput(equation)) {
+            throw new EquationFormatException("The given equation contains illegal character.");
+        } else if (!Equation.hasBalancedBracket(equation)) {
+            throw new EquationFormatException("The given equation has unbalanced brackets.");
+        }
+        this.resultMap = compute(equation).termSumMap;
     }
 
     /**
@@ -23,27 +30,20 @@ public class Equation {
      * @param equation
      * @return null if the given equation is not valid
      */
-    public Result getCanonicalForm(String equation) throws TermException {
-        // TODO: Check if equation contains any [ ^a-zA-Z\\^\\+\\-\\*\\/ ]
-
-        // TODO: Check if the input brackets are balanced
-
-        // TODO: Make sure the equation string is valid by this point
-
-        // TODO: Compute Canonical Term
+    public Result compute(String equation) throws TermException {
         String[] segments = equation.split("=");
         if (segments.length > 2 || segments.length < 1) {
             return null;
         }
-
         if (segments.length == 1) {
             return getCanonicalFormHelper(segments[0]);
         }
-
         String left_side = segments[0];
         String right_side = segments[1];
         Result left_canonical_form = getCanonicalFormHelper(left_side);
         Result right_canonical_form = getCanonicalFormHelper(right_side);
+        right_canonical_form.multiplyByConstant(-1);
+        left_canonical_form.addTo(right_canonical_form);
         return left_canonical_form;
     }
 
@@ -56,18 +56,12 @@ public class Equation {
         Term prev_term = null;
         char prev_sign = 1;
         char sign = '+';
-        boolean isConstant = true;
-        float number = 0f;
 
         for (int i = 0, N = chars.length; i < N; i++) {
             char c = chars[i];
-
             if (Character.isDigit(c) ||
                     Equation.isPowerSymbol(c) || Equation.isDotSymbol(c) ||
                     Character.isLetter(c)) {
-                if (Character.isLetter(c)) {
-                    isConstant = false;
-                }
                 if (start_cut_index == null) {
                     start_cut_index = i;
                     end_cut_index = start_cut_index;
@@ -106,26 +100,21 @@ public class Equation {
                 start_cut_index = end_cut_index = null;
             }
         }
-
-        return null;
+        return result;
     }
 
-//    private void handleTermHelper(Term term, String equation, int start_cut_index, int end_cut_index,
-//                                  char c, Result result, Term prev_term, int prev_sign)
-//            throws TermException {
-//
-//        }
-//    }
-//
-//    private void handleConstantHelper(float number, Result result) {
-//
-//    }
-
-    public Float appendDigit(float number, char digit) {
-        if (!Character.isDigit(digit)) {
-            return null;
+    public static boolean hasValidInput(String s) {
+        Pattern invalid_pattern = Pattern.compile("[^0-9a-zA-Z\\^\\+\\-\\*\\/\\.]");
+        Matcher matcher = invalid_pattern.matcher(s);
+        while (matcher.find()) {
+            return false;
         }
-        return (10 * number) + digit - '0';
+        return true;
+    }
+
+    public static boolean hasBalancedBracket(String s) {
+        // TODO
+        return true;
     }
 
     private static boolean isCloseBracket(char c) {
@@ -155,13 +144,17 @@ public class Equation {
     }
 
     class Result {
+        // ConstantSum is mapped to EmptyVariablesSet key
         private Map<Set<Variable>, Float> termSumMap;
-        private float constant_sum;
-        private char sign;
+        private char afterResultSign;
 
         public Result() {
-            this.sign = '+';
+            this.afterResultSign = '+';
             this.termSumMap = new HashMap<>();
+        }
+
+        public Result(Character afterResultSign) {
+            this.afterResultSign = afterResultSign;
         }
 
         public void addTerm(Term term) {
@@ -191,6 +184,26 @@ public class Equation {
                 termSumMap.put(vars, coefficient);
             } else {
                 termSumMap.put(vars, coefficient + sum_coefficient);
+            }
+        }
+
+        public void multiplyByConstant(float num) {
+            Set<Set<Variable>> keys = termSumMap.keySet();
+            for (Set<Variable> k : keys) {
+                float coefficient = termSumMap.get(k);
+                termSumMap.put(k, num * coefficient);
+            }
+        }
+
+        public void addTo(Result resultTarget) {
+            Map<Set<Variable>, Float> targetMap = resultTarget.termSumMap;
+            for (Map.Entry<Set<Variable>, Float> entry : targetMap.entrySet()) {
+                Float coefficient = this.termSumMap.get(entry.getKey());
+                if (coefficient == null) {
+                    this.termSumMap.put(entry.getKey(), entry.getValue());
+                } else {
+                    this.termSumMap.put(entry.getKey(), coefficient + entry.getValue());
+                }
             }
         }
     }

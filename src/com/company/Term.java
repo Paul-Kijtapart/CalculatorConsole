@@ -31,7 +31,7 @@ public class Term {
         }
     }
 
-    /* Return a Copy of given Term t*/
+    /* Return a Copy of given Term t */
     public Term(Term t) {
         this.variablesSet = new HashSet<>();
         variablesSet.addAll(t.getVariablesSet());
@@ -64,6 +64,7 @@ public class Term {
                 sign = c;
             } else if (Character.isLetter(c)) {
                 if (v.getBase() != null) {
+                    // Add Variables to the Term set
                     if (v.getDegree() == 0) {
                         v.setDegree(1);
                     }
@@ -81,8 +82,10 @@ public class Term {
         }
 
         if (res.hasEmptyBaseToDegreeMap() && current_coefficient > 1f) {
+            // This Term is a Constant
             res.multiplyCoefficientBy(current_coefficient / precision);
         } else if (v.getBase() != null) {
+            // Add Variables to the Term set
             if (v.getDegree() == 0) {
                 v.setDegree(1);
             }
@@ -114,10 +117,12 @@ public class Term {
         return res;
     }
 
+    /* Multiply the Coefficient of this Term by num (In-Place) */
     public void multiplyConstant(float num) {
         this.coefficient *= num;
     }
 
+    /* Create a copy of this term and Multiple its Coefficient by num of term_2 and Plus its Degree by term_2's Degree */
     public Term multiply(Term term_2) throws TermException {
         Term res = new Term(this);
         res.setCoefficient(res.getCoefficient() * term_2.getCoefficient());
@@ -143,6 +148,7 @@ public class Term {
         }
     }
 
+    /* Create a copy of this term and Divide its Coefficient by num of term_2 and Minus its Degree by term_2's Degree */
     public Term dividedBy(Term term_2) throws TermException {
         Term res = new Term(this);
         res.setCoefficient(res.getCoefficient() / term_2.getCoefficient());
@@ -161,6 +167,7 @@ public class Term {
         return res;
     }
 
+    /* Divide the Coefficient of this Term by num (In-Place) */
     public void divideByConstant(float num) {
         this.coefficient /= num;
     }
