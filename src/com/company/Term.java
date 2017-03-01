@@ -111,6 +111,10 @@ public class Term {
         return res;
     }
 
+    public void multiplyConstant(float num) {
+        this.coefficient *= num;
+    }
+
     public Term multiply(Term term_2) throws TermException{
         Term res = new Term(this);
         Map<Character, Integer> res_map = res.getBaseToDegreeMap();
