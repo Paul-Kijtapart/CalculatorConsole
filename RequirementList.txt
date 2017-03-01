@@ -1,0 +1,23 @@
+Requirement List for Equation
+1. Equation can contains any amount of Brackets
+2. Equation can contains many variables (Letter [a-zA-Z])
+3. Equation can Check if the input has Balanced Brackets
+4. Equation can contains +,-,*,/
+5. Legal Brackets include (),{},[]
+6. Equation can contains many Spaces
+7. Equation can Check if the given input is a valid equation
+8. Equation is considered in-valid if:
+    a. it contains [^a-zA-Z\\+\\-\\*\\/\\(\\)\\{\\}\\[\\]\\=]
+    b. it can have at most one '='
+
+
+Requirement List for News360Calculator
+1. has two modes: Interactive Mode and File Mode
+2. onStart: Users are asked to choose between the two modes.
+
+
+Requirement List for Term
+1. Input must NOT contains '+', '-', '*', '/' signs
+2. Input can contains [0-9a-zA-Z\\^\\.]
+3. Input can contain whiteSpace
+

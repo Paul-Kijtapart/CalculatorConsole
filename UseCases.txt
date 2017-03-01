@@ -1,0 +1,24 @@
+Use Case 1:
+Goal: User can insert an Equation and get Response back
+1. User starts NewsCalculator App
+2. User can choose between Interactive Mode and File Mode
+3. User selects Interactive Mode
+4. Prompt window is displayed on Screen
+5. User is asked to type in an Equation
+6. User types Valid Equation
+    6.1 User types Invalid Equation
+7. Equation Checks if the given Equation is valid
+8. The input equation is Valid
+    8.1 The input Equation is Not valid
+    8.2 Alert window is displayed to ask User to type again.
+9. Equation finds the Canonical Form of the Input equation
+10. Equation returns Canonical Form
+11. Canonical From is printed on the window as String (END)
+
+
+Use Case 2:
+Goal: User can insert the Name of the Text File
+
+
+
+
