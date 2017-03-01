@@ -36,18 +36,18 @@ public class Equation {
             return null;
         }
         if (segments.length == 1) {
-            return getCanonicalFormHelper(segments[0]);
+            return computeHelper(segments[0]);
         }
         String left_side = segments[0];
         String right_side = segments[1];
-        Result left_canonical_form = getCanonicalFormHelper(left_side);
-        Result right_canonical_form = getCanonicalFormHelper(right_side);
+        Result left_canonical_form = computeHelper(left_side);
+        Result right_canonical_form = computeHelper(right_side);
         right_canonical_form.multiplyByConstant(-1);
         left_canonical_form.addTo(right_canonical_form);
         return left_canonical_form;
     }
 
-    private Result getCanonicalFormHelper(String equation) throws TermException {
+    private Result computeHelper(String equation) throws TermException {
         char[] chars = equation.toCharArray();
         Term term = null;
         Integer start_cut_index = null, end_cut_index = null;
@@ -71,7 +71,7 @@ public class Equation {
             } else if (Equation.isMathOperator(c)) {
                 if (start_cut_index != null && end_cut_index != null) {
                     term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
-                    switch (c) {
+                    switch (sign) {
                         case '+':
                             result.addTerm(term);
                             break;
@@ -98,15 +98,55 @@ public class Equation {
                 sign = c;
                 term = null;
                 start_cut_index = end_cut_index = null;
+            } else if (isOpenBracket(c)) {
+                // Save Current result and Reset result and sign
+                result_before_open_bracket_stack.push(result);
+                result = new Result();
+                sign = '+';
+                start_cut_index = end_cut_index = null;
+            } else if (isCloseBracket(c)) {
+                // Update Result
+                Result front_result = result_before_open_bracket_stack.pop();
+                char front_sign = front_result.getSign();
+                result.operateWith(front_result, front_sign);
+                sign = prev_sign = '+';
+                term = prev_term = null;
+                start_cut_index = end_cut_index = null;
+            }
+        }
+
+        if (start_cut_index != null && end_cut_index != null) {
+            term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
+            switch (sign) {
+                case '+':
+                    result.addTerm(term);
+                    break;
+                case '-':
+                    term.multiplyConstant(-1);
+                    result.addTerm(term);
+                    break;
+                case '*':
+                    prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
+                    result.removeTerm(prev_term);
+                    term.multiply(prev_term);
+                    result.addTerm(term);
+                    break;
+                case '/':
+                    prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
+                    result.removeTerm(prev_term);
+                    term.dividedBy(prev_term);
+                    result.addTerm(term);
+                    break;
             }
         }
         return result;
     }
 
     public static boolean hasValidInput(String s) {
-        Pattern invalid_pattern = Pattern.compile("[^0-9a-zA-Z\\^\\+\\-\\*\\/\\.]");
+        Pattern invalid_pattern = Pattern.compile("[^0-9a-zA-Z\\^\\+\\-\\*\\/\\.\\s\\(\\)]");
         Matcher matcher = invalid_pattern.matcher(s);
         while (matcher.find()) {
+            System.err.println("illegal char found : " + matcher.group());
             return false;
         }
         return true;
@@ -137,24 +177,25 @@ public class Equation {
         return ('.' == c);
     }
 
-    public static boolean hasBalancedBrackets(String s) {
-
-
-        return false;
+    @Override
+    public String toString() {
+        return "Equation{" +
+                "resultMap=" + resultMap +
+                '}';
     }
 
     class Result {
         // ConstantSum is mapped to EmptyVariablesSet key
         private Map<Set<Variable>, Float> termSumMap;
-        private char afterResultSign;
+        private char sign;
 
         public Result() {
-            this.afterResultSign = '+';
+            this.sign = '+';
             this.termSumMap = new HashMap<>();
         }
 
-        public Result(Character afterResultSign) {
-            this.afterResultSign = afterResultSign;
+        public Result(Character sign) {
+            this.sign = sign;
         }
 
         public void addTerm(Term term) {
@@ -195,6 +236,10 @@ public class Equation {
             }
         }
 
+        /**
+         * Merge the Keys of both results and update corresponding coefficient (In-place)
+         * @param resultTarget
+         */
         public void addTo(Result resultTarget) {
             Map<Set<Variable>, Float> targetMap = resultTarget.termSumMap;
             for (Map.Entry<Set<Variable>, Float> entry : targetMap.entrySet()) {
@@ -205,6 +250,53 @@ public class Equation {
                     this.termSumMap.put(entry.getKey(), coefficient + entry.getValue());
                 }
             }
+        }
+
+        public char getSign() {
+            return sign;
+        }
+
+        public void operateWith(Result front_result, char front_sign) {
+            // Update this Result base on front sign
+            switch (front_sign) {
+                case '+':
+                    this.addTo(front_result);
+                    break;
+                case '-':
+                    this.multiplyByConstant(-1);
+                    this.addTo(front_result);
+                    break;
+                case '*':
+                    break;
+                case '/':
+                    break;
+                default:
+                    System.err.println("Unrecognized sign to operate with Equation Result.");
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "sign=" + sign +
+                    ", termSumMap=" + termSumMap +
+                    '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Result result = (Result) o;
+
+            return termSumMap != null ? termSumMap.equals(result.termSumMap) : result.termSumMap == null;
+
+        }
+
+        @Override
+        public int hashCode() {
+            return termSumMap != null ? termSumMap.hashCode() : 0;
         }
     }
 }
