@@ -1,5 +1,6 @@
 package com.company;
 
+import com.company.Exceptions.EquationException;
 import com.company.Exceptions.EquationFormatException;
 import com.company.Exceptions.TermException;
 
@@ -33,7 +34,10 @@ public class InteractiveMode {
                 } catch (TermException e) {
                     System.out.println("InteractiveMode : " + e.toString());
                     continue;
+                } catch (EquationException e) {
+                    System.out.println("InteractiveMode : " + e.toString());
                 }
+
                 System.out.println("Canonical From : " + eq.toCanonicalString());
             }
         } catch (IOException e) {

@@ -1,6 +1,7 @@
 package com.company;
 
 
+import com.company.Exceptions.EquationException;
 import com.company.Exceptions.EquationFormatException;
 import com.company.Exceptions.TermException;
 
@@ -49,16 +50,11 @@ public class Equation {
         }
     }
 
-    /**
-     * Return the CanonicalFrom of the given equation string
-     *
-     * @param equation
-     * @return null if the given equation is not valid
-     */
-    public Result compute(String equation) throws TermException {
+
+    public Result compute(String equation) throws TermException, EquationFormatException {
         String[] segments = equation.split("=");
         if (segments.length > 2 || segments.length < 1) {
-            return null;
+            throw new EquationFormatException("There can be at most one equal sign.");
         }
         if (segments.length == 1) {
             return computeHelper(segments[0]);
@@ -72,14 +68,23 @@ public class Equation {
         return left_canonical_form;
     }
 
-    private Result computeHelper(String equation) throws TermException {
+    /**
+     * Pre: the given equation is valid
+     *
+     * @param equation
+     * @return Result that contains only the terms to be sum later
+     * @throws TermException
+     */
+    private Result computeHelper(String equation) throws TermException, EquationFormatException {
         char[] chars = equation.toCharArray();
         Term term = null;
         Integer start_cut_index = null, end_cut_index = null;
         Result result = new Result();
         Stack<Result> result_before_open_bracket_stack = new Stack<>();
-        Term prev_term = null;
-        char prev_sign = 1;
+        Term prev_term = null;      // To be used with 2x/3y
+        Result prev_result = null;  // To be used with (2x+3y)*5z
+        Character prev_result_front_sign = null;
+        boolean multiply_div_result_flag = false;
         char sign = '+';
 
         for (int i = 0, N = chars.length; i < N; i++) {
@@ -98,11 +103,21 @@ public class Equation {
                 // Create a term from the selected segment and apply to Result
                 if (start_cut_index != null && end_cut_index != null) {
                     term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
-                    applyTermHelper(term, sign, prev_term, prev_sign, result);
+                    if (prev_result != null && prev_result_front_sign != null && multiply_div_result_flag) {
+                        applyResultHelper(term, sign, prev_result, prev_result_front_sign,result);
+                        prev_result = null;
+                        prev_result_front_sign = null;
+                        multiply_div_result_flag = false;
+                    } else {
+                        applyTermHelper(term, sign, prev_term, result);
+                    }
+                } else if ((c == '*' || c == '/') && i + 1 < N && !isOpenBracket(chars[i+1])
+                        && prev_result != null && prev_result_front_sign != null) {
+                    multiply_div_result_flag = true;
                 }
+
                 // Reset term
                 prev_term = term;
-                prev_sign = sign;
                 sign = c;
                 term = null;
                 start_cut_index = end_cut_index = null;
@@ -120,15 +135,18 @@ public class Equation {
                 // Apply Term to Result
                 if (start_cut_index != null && end_cut_index != null) {
                     term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
-                    applyTermHelper(term, sign, prev_term, prev_sign, result);
+                    applyTermHelper(term, sign, prev_term, result);
                 }
+
                 // Apply Before Result
                 Result front_result = result_before_open_bracket_stack.pop();
                 char front_sign = front_result.getSign();
-                result.operateWith(front_result, front_sign);
+                prev_result = new Result(result);
+                prev_result_front_sign = front_sign;
+                result.operateWithResultAtOpenBracket(front_result, front_sign);
 
                 // Reset
-                sign = prev_sign = '+';
+                sign  = '+';
                 term = prev_term = null;
                 start_cut_index = end_cut_index = null;
             }
@@ -136,14 +154,59 @@ public class Equation {
 
         if (start_cut_index != null && end_cut_index != null) {
             term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
-            applyTermHelper(term, sign, prev_term, prev_sign, result);
+            if (prev_result != null && multiply_div_result_flag) {
+                applyResultHelper(term, sign, prev_result, prev_result_front_sign, result);
+            } else {
+                applyTermHelper(term, sign, prev_term, result);
+            }
         }
 
         return result;
     }
 
+    private void applyResultHelper(Term term, char sign, Result prev_result, Character prev_result_front_sign ,Result result) throws TermException {
+        // sign must be either * or / to need resultHelper
+        switch (sign) {
+            case '*':
+                Result replaced_result = prev_result.multiplyTerm(term);
+                restoreResult(result, prev_result, prev_result_front_sign, replaced_result);
+                break;
+            case '/':
+                Result rr = prev_result.divideByTerm(term);
+                restoreResult(result, prev_result, prev_result_front_sign, rr);
+                break;
+            default:
+                System.err.println("runtime error: sign must be either * or /");;
+        }
+    }
+
+    private void restoreResult(Result result, Result prev_result, Character prev_result_front_sign, Result replaced_result) throws TermException {
+        switch (prev_result_front_sign) {
+            case '+':
+                prev_result.multiplyByConstant(-1);
+                result.plusTo(prev_result);
+                result.plusTo(replaced_result);
+                break;
+            case '-':
+                result.plusTo(prev_result);
+                replaced_result.multiplyByConstant(-1);
+                result.plusTo(replaced_result);
+                break;
+            case '*':
+                Result temp = result.divideBy(prev_result);
+                temp = temp.multiply(replaced_result);
+                result.setResult(temp);
+                break;
+            case '/':
+                Result temp2 = result.multiply(prev_result);
+                temp2 = temp2.divideBy(replaced_result);
+                replaced_result.setResult(temp2);
+                break;
+        }
+    }
+
     /* Update Result based on the previous Pair of Term and Sign */
-    public void applyTermHelper(Term term, char sign, Term prev_term, char prev_sign, Result result) throws TermException {
+    public void applyTermHelper(Term term, char sign, Term prev_term, Result result) throws TermException {
         switch (sign) {
             case '+':
                 result.addTerm(term);
@@ -159,12 +222,13 @@ public class Equation {
                 break;
             case '/':
                 result.removeTerm(prev_term);
-                term.dividedBy(prev_term);
-                result.addTerm(term);
+                prev_term = prev_term.dividedBy(term);
+                result.addTerm(prev_term);
                 break;
         }
     }
 
+    /* Check whether the given input contains Not-Allowed symbols or characters */
     public static boolean hasValidInput(String s) {
         Pattern invalid_pattern = Pattern.compile("[^0-9a-zA-Z\\^\\+\\-\\*\\/\\.\\s\\(\\)\\=]");
         Matcher matcher = invalid_pattern.matcher(s);
@@ -175,10 +239,11 @@ public class Equation {
         return true;
     }
 
+    /* Check whether the given input has balanced matching brackets */
     public static boolean hasBalancedBracket(String s) {
         Stack<Character> openBracketStack = new Stack<>();
         char[] chars = s.toCharArray();
-        for (int i =0, N = chars.length; i < N ;i++) {
+        for (int i = 0, N = chars.length; i < N; i++) {
             char c = chars[i];
             if (isOpenBracket(c)) {
                 openBracketStack.push(c);
@@ -287,27 +352,37 @@ public class Equation {
             termSumMap.put(constantKey, 0f);
         }
 
+        /* Return a Deep copy of given result */
+        public Result(Result result) {
+            this.termSumMap = new HashMap<>(result.termSumMap);
+            this.sign = result.sign;
+        }
+
+        /* Plus the values of this result by the given term */
         public void addTerm(Term term) {
             float coefficient = term.getCoefficient();
             Set<Variable> vars = term.getVariablesSet();
             addToTermSum(vars, coefficient);
         }
 
+        /* Minus the values of this result by the given term*/
         public void removeTerm(Term term) {
             float coefficient = term.getCoefficient();
             Set<Variable> vars = term.getVariablesSet();
             removeFromTermSum(vars, coefficient);
         }
 
+        /* Minus the value of the termSumMap's element whose value matches key vars */
         private void removeFromTermSum(Set<Variable> vars, float coefficient) {
             Float sum_coefficient = termSumMap.get(vars);
             if (sum_coefficient == null) {
-                termSumMap.put(vars, -coefficient);
+                termSumMap.put(vars, -1 * coefficient);
             } else {
                 termSumMap.put(vars, sum_coefficient - coefficient);
             }
         }
 
+        /* Add the given key vars and its corresponding value coefficient to termSumMap */
         private void addToTermSum(Set<Variable> vars, float coefficient) {
             Float sum_coefficient = termSumMap.get(vars);
             if (sum_coefficient == null) {
@@ -317,6 +392,7 @@ public class Equation {
             }
         }
 
+        /* Multiply the given constant to all values of the termSumMap (In-Place) */
         public void multiplyByConstant(float num) {
             Set<Set<Variable>> keys = termSumMap.keySet();
             for (Set<Variable> k : keys) {
@@ -346,7 +422,14 @@ public class Equation {
             return sign;
         }
 
-        public void operateWith(Result front_result, char front_sign) {
+        /**
+         * perform Math operation against front_result based on given front_sign
+         *
+         * @param front_result - is one of '+', '-', '*', '/'
+         * @param front_sign   - the result to perform math operation on
+         * @throws TermException
+         */
+        public void operateWithResultAtOpenBracket(Result front_result, char front_sign) throws TermException {
             // Update this Result base on front sign
             switch (front_sign) {
                 case '+':
@@ -357,12 +440,76 @@ public class Equation {
                     this.plusTo(front_result);
                     break;
                 case '*':
+                    Result product = this.multiply(front_result);
+                    this.setResult(product);
                     break;
                 case '/':
+                    Result division = this.divideBy(front_result);
+                    this.setResult(division);
                     break;
                 default:
                     System.err.println("Unrecognized sign to operate with Equation Result.");
             }
+        }
+
+        /* Set the properties of this Result to point to given result */
+        private void setResult(Result result) {
+            this.termSumMap = result.termSumMap;
+            this.sign = result.sign;
+        }
+
+        /* Multiply this result by the result of target and return in new Result (both original results untouched) */
+        public Result multiply(Result target) throws TermException {
+            Result res = new Result();
+            Map<Set<Variable>, Float> baseMap = this.termSumMap;
+            Map<Set<Variable>, Float> targetMap = target.termSumMap;
+            for (Map.Entry<Set<Variable>, Float> base_entry : baseMap.entrySet()) {
+                Term base_term = new Term(base_entry.getValue(), base_entry.getKey());
+                for (Map.Entry<Set<Variable>, Float> target_entry : targetMap.entrySet()) {
+                    Term target_term = new Term(target_entry.getValue(), target_entry.getKey());
+                    Term product_term = base_term.multiply(target_term);
+                    res.addTerm(product_term);
+                }
+            }
+            return res;
+        }
+
+        /* Multiply this result by given term and return the computed value in new Result (Both original untouched)*/
+        public Result multiplyTerm(Term term) throws TermException {
+            Result res = new Result();
+            for (Map.Entry<Set<Variable>, Float> entry : this.termSumMap.entrySet()) {
+                Term base_term = new Term(entry.getValue(), entry.getKey());
+                Term product_term = base_term.multiply(term);
+                res.addTerm(product_term);
+            }
+            return res;
+        }
+
+        /* Divide this result by given term and return the computed value in new Result (Both original untouched)*/
+        public Result divideByTerm(Term term) throws TermException {
+            Result res = new Result();
+            for (Map.Entry<Set<Variable>, Float> entry : this.termSumMap.entrySet()) {
+                Term base_term = new Term(entry.getValue(), entry.getKey());
+                Term product_term = base_term.dividedBy(term);
+                res.addTerm(product_term);
+            }
+            return res;
+        }
+
+        /* Divide this result by the result of target and return the computed value new Result (both original results untouched) */
+        public Result divideBy(Result target) throws TermException {
+            Result res = new Result();
+            Map<Set<Variable>, Float> baseMap = this.termSumMap;
+            Map<Set<Variable>, Float> targetMap = target.termSumMap;
+            for (Map.Entry<Set<Variable>, Float> base_entry : baseMap.entrySet()) {
+                Term base_term = new Term(base_entry.getValue(), base_entry.getKey());
+                for (Map.Entry<Set<Variable>, Float> target_entry : targetMap.entrySet()) {
+                    Term target_term = new Term(target_entry.getValue(), target_entry.getKey());
+                    Term product_term = base_term.dividedBy(target_term);
+                    res.addTerm(product_term);
+                }
+            }
+            return res;
         }
 
         @Override

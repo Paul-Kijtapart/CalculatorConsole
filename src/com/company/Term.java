@@ -41,6 +41,20 @@ public class Term {
         baseToDegreeMap.putAll(t.getBaseToDegreeMap());
     }
 
+    public Term(Float coefficient, Set<Variable> variables) {
+        this.coefficient = coefficient;
+        this.variablesSet = variables;
+        this.baseToDegreeMap = buildBaseToDegreeMap(this.variablesSet);
+    }
+
+    private Map<Character, Integer> buildBaseToDegreeMap(Set<Variable> variablesSet) {
+        Map<Character, Integer> res = new HashMap<>();
+        for (Variable v : variablesSet) {
+            res.put(v.getBase(), v.getDegree());
+        }
+        return res;
+    }
+
     public void removeVariableWithDegreeZero(Set<Variable> variablesSet) {
         Iterator<Variable> vars = variablesSet.iterator();
         while (vars.hasNext()) {
@@ -68,7 +82,7 @@ public class Term {
                         // Check what precedes ^ sign
                         throw new TermFormatException("Input cannot be: ^2 without preceding number or char base");
                     }
-                    if (Character.isDigit(chars[i-2])) {
+                    if (Character.isDigit(chars[i - 2])) {
                         // ^ sign was right after a digit
                         current_coefficient = (float) Math.pow(current_coefficient, c - '0');
                         res.multiplyCoefficientBy(current_coefficient);
@@ -162,6 +176,10 @@ public class Term {
         return res;
     }
 
+    public boolean isTermConstant() {
+        return (this.baseToDegreeMap.isEmpty() && this.variablesSet.isEmpty());
+    }
+
     /* Multiply the Coefficient of this Term by num (In-Place) */
     public void multiplyConstant(float num) {
         this.coefficient *= num;
@@ -169,10 +187,19 @@ public class Term {
 
     /* Create a copy of this term and Multiple its Coefficient by num of term_2 and Plus its Degree by term_2's Degree */
     public Term multiply(Term term_2) throws TermException {
-        Term res = new Term(this);
-        res.setCoefficient(res.getCoefficient() * term_2.getCoefficient());
+        Term res =
+                this.getBaseToDegreeMap().size() >= term_2.getBaseToDegreeMap().size() ?
+                        new Term(this) : new Term(term_2);
+        Term target =
+                this.getBaseToDegreeMap().size() >= term_2.getBaseToDegreeMap().size() ?
+                        term_2 : this;
+
+        res.setCoefficient(res.getCoefficient() * target.getCoefficient());
+        if (this.isTermConstant() || term_2.isTermConstant()) {
+            return res;
+        }
         Map<Character, Integer> res_map = res.getBaseToDegreeMap();
-        Map<Character, Integer> target_map = term_2.getBaseToDegreeMap();
+        Map<Character, Integer> target_map = target.getBaseToDegreeMap();
         for (Map.Entry<Character, Integer> entry : target_map.entrySet()) {
             Integer power = res_map.get(entry.getKey());
             if (power == null) {
@@ -202,7 +229,7 @@ public class Term {
         for (Map.Entry<Character, Integer> entry : target_map.entrySet()) {
             Integer power = res_map.get(entry.getKey());
             if (power == null) {
-                res_map.put(entry.getKey(), entry.getValue());
+                res_map.put(entry.getKey(), -1 * entry.getValue());
             } else {
                 res_map.put(entry.getKey(), power - entry.getValue());
             }
