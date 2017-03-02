@@ -19,12 +19,7 @@ public class InteractiveMode {
             while (true) {
                 String line = null;
                 System.out.println("Please type a Math Equation or quit if you wish to exit");
-
                 line = in.readLine();
-                if (News360Calculator.isExitCommand(line)) {
-                    System.out.println("Exiting Interactive Mode.");
-                    break;
-                }
                 Equation eq = null;
                 try {
                     eq = new Equation(line);
@@ -35,11 +30,17 @@ public class InteractiveMode {
                     System.out.println("InteractiveMode : " + e.getMessage());
                     continue;
                 }
-
-                System.out.println("Canonical From : " + eq.toCanonicalString());
+                System.out.println("Canonical Form : " + eq.toCanonicalString());
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            System.out.println("Exiting Interactive Mode.");
+            try {
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
