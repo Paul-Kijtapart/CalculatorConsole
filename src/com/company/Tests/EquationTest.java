@@ -42,13 +42,17 @@ public class EquationTest {
     public void testHasValidInput() throws Exception {
         Assert.assertTrue(Equation.hasValidInput("3.5xy - 2x + 3 - 2"));
         Assert.assertTrue(Equation.hasValidInput("3.5xy + ( yx - xy ) - 2.12y"));
-        Assert.assertTrue(Equation.hasValidInput(""));
-        Assert.assertTrue(Equation.hasValidInput(""));
+        Assert.assertTrue(Equation.hasValidInput("x = 1"));
+        Assert.assertTrue(Equation.hasValidInput("x - (y^2 - x) = 0"));
+        Assert.assertTrue(Equation.hasValidInput("x - (0 - (0 - x)) = "));
     }
 
     @Test
     public void testHasBalancedBracket() throws Exception {
-
+        Assert.assertTrue(Equation.hasBalancedBracket("(2+3)+{7*2}-[3.5xy -y]"));
+        Assert.assertTrue(Equation.hasBalancedBracket("({[x^2 * 4^2]})"));
+        Assert.assertFalse(Equation.hasBalancedBracket("((50xy -2y)"));
+        Assert.assertFalse(Equation.hasBalancedBracket("(2x-5z}"));
     }
 
     @Test
@@ -72,4 +76,11 @@ public class EquationTest {
         Assert.assertEquals(eq_actual_4, eq_expected_4);
         Assert.assertEquals(eq_actual_5, eq_expected_5);
     }
+
+    @Test
+    public void testRemoveFromMapWithValue() throws Exception {
+        Assert.assertEquals(eq_expected_5.getResultMap().size(), 0);
+    }
+
+
 }

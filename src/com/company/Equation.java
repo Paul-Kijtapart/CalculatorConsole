@@ -14,6 +14,20 @@ import java.util.regex.Pattern;
 public class Equation {
     private Map<Set<Variable>, Float> resultMap;
 
+    // Constants
+    public static final String OPEN_BRACKET = "([{";
+    public static final String CLOSED_BRACKET = ")]}";
+    public static final String ALLOWED_MATH_OPERATOR = "+-/*";
+    public static final Map<Character, Character> MATCHED_BRACKETS;
+
+    static {
+        MATCHED_BRACKETS = new HashMap<>();
+        MATCHED_BRACKETS.put(')', '(');
+        MATCHED_BRACKETS.put('}', '{');
+        MATCHED_BRACKETS.put(']', '[');
+    }
+
+
     public Equation(String equation) throws EquationFormatException, TermException {
         if (!Equation.hasValidInput(equation)) {
             throw new EquationFormatException("The given equation contains illegal character.");
@@ -27,9 +41,9 @@ public class Equation {
 
     /* Remove all Entry whose value equals to 0f */
     public void removeFromMapWithValue(Map<Set<Variable>, Float> map, Float value) {
-        for(Iterator<Map.Entry<Set<Variable>, Float>> it = map.entrySet().iterator(); it.hasNext(); ) {
+        for (Iterator<Map.Entry<Set<Variable>, Float>> it = map.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<Set<Variable>, Float> entry = it.next();
-            if(entry.getValue().equals(value)) {
+            if (entry.getValue().equals(value)) {
                 it.remove();
             }
         }
@@ -73,6 +87,7 @@ public class Equation {
             if (Character.isDigit(c) ||
                     Equation.isPowerSymbol(c) || Equation.isDotSymbol(c) ||
                     Character.isLetter(c)) {
+                // Identify the segment to be parsed to Term
                 if (start_cut_index == null) {
                     start_cut_index = i;
                     end_cut_index = start_cut_index;
@@ -80,18 +95,19 @@ public class Equation {
                     end_cut_index = i;
                 }
             } else if (Equation.isMathOperator(c)) {
+                // Create a term from the selected segment and apply to Result
                 if (start_cut_index != null && end_cut_index != null) {
                     term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
                     applyTermHelper(term, sign, prev_term, prev_sign, result);
                 }
-                // Reset
+                // Reset term
                 prev_term = term;
                 prev_sign = sign;
                 sign = c;
                 term = null;
                 start_cut_index = end_cut_index = null;
             } else if (isOpenBracket(c)) {
-                // Save Current result and Reset result and sign
+                // Save Current result and the sign before this open bracket
                 result.sign = sign;
                 result_before_open_bracket_stack.push(result);
 
@@ -162,7 +178,29 @@ public class Equation {
     }
 
     public static boolean hasBalancedBracket(String s) {
-        // TODO
+        Stack<Character> openBracketStack = new Stack<>();
+        char[] chars = s.toCharArray();
+        for (int i =0, N = chars.length; i < N ;i++) {
+            char c = chars[i];
+            if (isOpenBracket(c)) {
+                openBracketStack.push(c);
+            } else if (isCloseBracket(c)) {
+                if (openBracketStack.isEmpty()) {
+                    return false;
+                }
+                Character matched_open_bracket = MATCHED_BRACKETS.get(c);
+                if (matched_open_bracket == null) {
+                    return false;
+                }
+                if (matched_open_bracket != openBracketStack.pop()) {
+                    return false;
+                }
+            }
+        }
+        if (!openBracketStack.isEmpty()) {
+            // Having more open brackets than close brackets
+            return false;
+        }
         return true;
     }
 
@@ -177,15 +215,15 @@ public class Equation {
 
 
     private static boolean isCloseBracket(char c) {
-        return (c == ')');
+        return CLOSED_BRACKET.indexOf(c) > -1;
     }
 
     private static boolean isOpenBracket(char c) {
-        return (c == '(');
+        return OPEN_BRACKET.indexOf(c) > -1;
     }
 
     private static boolean isMathOperator(char c) {
-        return (c == '+' || c == '-' || c == '*' || c == '/');
+        return ALLOWED_MATH_OPERATOR.indexOf(c) > -1;
     }
 
     public static boolean isPowerSymbol(char c) {
@@ -196,6 +234,9 @@ public class Equation {
         return ('.' == c);
     }
 
+    public Map<Set<Variable>, Float> getResultMap() {
+        return resultMap;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -220,8 +261,7 @@ public class Equation {
     }
 
     class Result {
-        // ConstantSum is mapped to EmptyVariablesSet key
-        private Map<Set<Variable>, Float> termSumMap;
+        private Map<Set<Variable>, Float> termSumMap; // ConstantSum is mapped to EmptyVariablesSet key
         private char sign;
 
         public Result() {
@@ -229,10 +269,6 @@ public class Equation {
             this.termSumMap = new HashMap<>();
             Set<Variable> constantKey = new HashSet<>();
             termSumMap.put(constantKey, 0f);
-        }
-
-        public Result(Character sign) {
-            this.sign = sign;
         }
 
         public void addTerm(Term term) {
@@ -329,7 +365,6 @@ public class Equation {
             Result result = (Result) o;
 
             return termSumMap != null ? termSumMap.equals(result.termSumMap) : result.termSumMap == null;
-
         }
 
         @Override

@@ -19,7 +19,7 @@ public class Variable {
 
     public Variable(Character base) {
         this.base = base;
-        this.degree = 0;
+        this.degree = null;
     }
 
     public Variable(Variable v) {
@@ -28,13 +28,13 @@ public class Variable {
     }
 
     public static Variable getEmptyVariable() {
-        return new Variable(null, 0);
+        return new Variable(null, null);
     }
 
     /* Reset Base, Degree to their default values */
     public void setEmpty() {
         this.setBase(null);
-        this.setDegree(0);
+        this.setDegree(null);
     }
 
     /* Append character digit c to the end of Degree */
@@ -42,6 +42,9 @@ public class Variable {
         if (!Character.isDigit(c)) {
             System.err.println("Cannot append Non-Digit character to Degree");;
             return;
+        }
+        if (degree == null) {
+            degree = 0;
         }
         this.degree = (10 * this.degree) + c - '0';
     }

@@ -29,6 +29,7 @@ public class Term {
             Variable v = new Variable(entry.getKey(), entry.getValue());
             this.variablesSet.add(v);
         }
+        removeVariableWithDegreeZero(variablesSet);
     }
 
     /* Return a Copy of given Term t */
@@ -40,26 +41,56 @@ public class Term {
         baseToDegreeMap.putAll(t.getBaseToDegreeMap());
     }
 
-    private CoefficientAndBaseToDegreeMap getBaseToDegreeMap(String s) {
+    public void removeVariableWithDegreeZero(Set<Variable> variablesSet) {
+        Iterator<Variable> vars = variablesSet.iterator();
+        while (vars.hasNext()) {
+            Variable v = vars.next();
+            if (v.getDegree() == 0) {
+                vars.remove();
+            }
+        }
+    }
+
+    private CoefficientAndBaseToDegreeMap getBaseToDegreeMap(String s) throws TermFormatException {
         CoefficientAndBaseToDegreeMap res = new CoefficientAndBaseToDegreeMap();
         int precision = 1;
         Character sign = '+';
         Variable v = Variable.getEmptyVariable();
         char[] chars = s.toCharArray();
-        Float current_coefficient = 0f;
+        Float current_coefficient = null;
         boolean foundDigit = false;
 
         for (int i = 0, N = chars.length; i < N; i++) {
             char c = chars[i];
             if (Character.isDigit(c)) {
                 if (sign == '^') {
-                    v.appendDegree(c);
+                    if (i - 2 < 0) {
+                        // Check what precedes ^ sign
+                        throw new TermFormatException("Input cannot be: ^2 without preceding number or char base");
+                    }
+                    if (Character.isDigit(chars[i-2])) {
+                        // ^ sign was right after a digit
+                        current_coefficient = (float) Math.pow(current_coefficient, c - '0');
+                        res.multiplyCoefficientBy(current_coefficient);
+                        // Reset
+                        current_coefficient = null;
+                        foundDigit = false;
+                    } else {
+                        // ^ sign was right after a letter base
+                        v.appendDegree(c);
+                    }
                     sign = '+';
                 } else if (sign == '.') {
                     precision *= 10;
+                    if (current_coefficient == null) {
+                        current_coefficient = 0f;
+                    }
                     current_coefficient = (10 * current_coefficient) + c - '0';
                 } else {
                     foundDigit = true;
+                    if (current_coefficient == null) {
+                        current_coefficient = 0f;
+                    }
                     current_coefficient = (10 * current_coefficient) + c - '0';
                 }
             } else if (isTermSymbol(c)) {
@@ -67,35 +98,43 @@ public class Term {
             } else if (Character.isLetter(c)) {
                 if (v.getBase() != null) {
                     // Add Variables to the Term set
-                    if (v.getDegree() == 0) {
+                    if (v.getDegree() == null) {
                         v.setDegree(1);
                     }
                     res.putVariable(v.getBase(), v.getDegree());
                     v.setEmpty();
                 }
                 v.setBase(c);
-                if (current_coefficient == 0 && !foundDigit) {
+                if (current_coefficient == null && !foundDigit) {
                     current_coefficient = 1f;
                 }
+
+                // Reset
                 foundDigit = false;
                 res.multiplyCoefficientBy(current_coefficient / precision);
-                current_coefficient = 0f;
+                current_coefficient = null;
                 precision = 1;
             }
         }
         if (res.hasEmptyBaseToDegreeMap() && foundDigit) {
             // This Term is a Constant
-            if (current_coefficient == 0f) {
-                res.coefficient = 0f;
-            } else {
+            // Update current coefficient with current Degree if any
+            Integer degree = v.getDegree();
+            if (degree != null) {
+                current_coefficient = (float) Math.pow(current_coefficient, v.getDegree());
+            }
+
+            // Apply current coefficient to total coefficient of the term
+            if (current_coefficient != null) {
                 res.multiplyCoefficientBy(current_coefficient / precision);
             }
         } else if (v.getBase() != null) {
             // Add Variables to the Term set
-            if (v.getDegree() == 0) {
+            // Eg: found "x", "2x"
+            if (v.getDegree() == null) {
                 v.setDegree(1);
             }
-            if (current_coefficient == 0) {
+            if (current_coefficient == null) {
                 current_coefficient = 1f;
             }
             res.multiplyCoefficientBy(current_coefficient / precision);
