@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 public class Equation {
     private Map<Set<Variable>, Float> resultMap;
 
-
     public Equation(String equation) throws EquationFormatException, TermException {
         if (!Equation.hasValidInput(equation)) {
             throw new EquationFormatException("The given equation contains illegal character.");
