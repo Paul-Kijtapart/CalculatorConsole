@@ -153,13 +153,11 @@ public class Equation {
                 result.addTerm(term);
                 break;
             case '*':
-                prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
                 result.removeTerm(prev_term);
-                term.multiply(prev_term);
+                term = term.multiply(prev_term);
                 result.addTerm(term);
                 break;
             case '/':
-                prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
                 result.removeTerm(prev_term);
                 term.dividedBy(prev_term);
                 result.addTerm(term);
@@ -238,6 +236,26 @@ public class Equation {
         return resultMap;
     }
 
+    public String toCanonicalString() {
+        StringBuilder res = new StringBuilder();
+        int i = 0;
+        for (Map.Entry<Set<Variable>, Float> entry : this.resultMap.entrySet()) {
+            if (i != 0) {
+                if (entry.getValue() > 0) {
+                    res.append('+');
+                }
+            }
+            res.append(entry.getValue());
+            Set<Variable> vars = entry.getKey();
+            for (Variable v : vars) {
+                res.append(v.toString());
+            }
+            i += 1;
+        }
+        res.append(" = 0");
+        return res.toString();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -255,9 +273,7 @@ public class Equation {
 
     @Override
     public String toString() {
-        return "Equation{" +
-                "resultMap=" + resultMap +
-                '}';
+        return "Equation{" + resultMap + '}';
     }
 
     class Result {

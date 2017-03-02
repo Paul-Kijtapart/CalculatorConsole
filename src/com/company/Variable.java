@@ -51,7 +51,7 @@ public class Variable {
 
     @Override
     public String toString() {
-        return String.format("%s ^ %d ", this.base, this.degree);
+        return String.format("%s^%d ", this.base, this.degree);
     }
 
     public void setBase(Character base) {

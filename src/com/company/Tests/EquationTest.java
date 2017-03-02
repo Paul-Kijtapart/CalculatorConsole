@@ -11,9 +11,12 @@ import org.junit.Test;
  */
 public class EquationTest {
     Equation eq_actual_1, eq_actual_2, eq_actual_3, eq_actual_4,
-            eq_actual_5;
+            eq_actual_5, eq_actual_6;
 
-    Equation eq_expected_2, eq_expected_3, eq_expected_4, eq_expected_5;
+    Equation eq_expected_1, eq_expected_2, eq_expected_3,
+            eq_expected_4, eq_expected_5, eq_expected_6;
+
+    Equation eq_multiply_1, eq_multiply_2;
 
     @Before
     public void setUp() throws Exception {
@@ -23,19 +26,25 @@ public class EquationTest {
         eq_actual_4 = new Equation("x - (y^2 - x) = 0");
         eq_actual_5 = new Equation("x - (0 - (0 - x)) = ");
 
+        eq_expected_1 = new Equation("3.5xy - 2.12y = 0");
         eq_expected_2 = new Equation("x^2 - y^2 + 4.5xy = 0");
         eq_expected_3 = new Equation("x - 1 = 0");
         eq_expected_4 = new Equation("2x - y^2 = 0");
         eq_expected_5 = new Equation("0 = 0");
+
+        eq_multiply_1 = new Equation(" -3 * 45");
+        eq_multiply_2 = new Equation("-3.12x^2y + 2yx^2 = -3 * 45");
     }
 
     @After
     public void tearDown() throws Exception {
         eq_actual_1 = eq_actual_2 = eq_actual_3 = eq_actual_4 =
-                eq_actual_5 = null;
+                eq_actual_5 = eq_actual_6 = null;
 
-        eq_expected_2 = eq_expected_3 = eq_expected_4 =
-                eq_expected_5 = null;
+        eq_expected_1 = eq_expected_2 = eq_expected_3 =
+                eq_expected_4 = eq_expected_5 = eq_expected_6 = null;
+
+        eq_multiply_1 = eq_multiply_2 = null;
     }
 
     @Test
@@ -71,6 +80,7 @@ public class EquationTest {
 
     @Test
     public void testEquals() throws Exception {
+        Assert.assertEquals(eq_actual_1, eq_expected_1);
         Assert.assertEquals(eq_actual_2, eq_expected_2);
         Assert.assertEquals(eq_actual_3, eq_expected_3);
         Assert.assertEquals(eq_actual_4, eq_expected_4);
@@ -80,6 +90,8 @@ public class EquationTest {
     @Test
     public void testRemoveFromMapWithValue() throws Exception {
         Assert.assertEquals(eq_expected_5.getResultMap().size(), 0);
+        System.out.println(eq_multiply_1);
+        System.out.println(eq_multiply_2);
     }
 
 
