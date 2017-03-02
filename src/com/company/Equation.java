@@ -1,10 +1,11 @@
 package com.company;
 
 
-import com.company.Exceptions.EquationException;
 import com.company.Exceptions.EquationFormatException;
 import com.company.Exceptions.TermException;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,7 +70,7 @@ public class Equation {
     }
 
     /**
-     * Pre: the given equation is valid
+     * Precondition: the given equation is valid
      *
      * @param equation
      * @return Result that contains only the terms to be sum later
@@ -104,14 +105,14 @@ public class Equation {
                 if (start_cut_index != null && end_cut_index != null) {
                     term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
                     if (prev_result != null && prev_result_front_sign != null && multiply_div_result_flag) {
-                        applyResultHelper(term, sign, prev_result, prev_result_front_sign,result);
+                        applyResultHelper(term, sign, prev_result, prev_result_front_sign, result);
                         prev_result = null;
                         prev_result_front_sign = null;
                         multiply_div_result_flag = false;
                     } else {
                         applyTermHelper(term, sign, prev_term, result);
                     }
-                } else if ((c == '*' || c == '/') && i + 1 < N && !isOpenBracket(chars[i+1])
+                } else if ((c == '*' || c == '/') && i + 1 < N && !isOpenBracket(chars[i + 1])
                         && prev_result != null && prev_result_front_sign != null) {
                     multiply_div_result_flag = true;
                 }
@@ -146,7 +147,7 @@ public class Equation {
                 result.operateWithResultAtOpenBracket(front_result, front_sign);
 
                 // Reset
-                sign  = '+';
+                sign = '+';
                 term = prev_term = null;
                 start_cut_index = end_cut_index = null;
             }
@@ -164,7 +165,7 @@ public class Equation {
         return result;
     }
 
-    private void applyResultHelper(Term term, char sign, Result prev_result, Character prev_result_front_sign ,Result result) throws TermException {
+    private void applyResultHelper(Term term, char sign, Result prev_result, Character prev_result_front_sign, Result result) throws TermException {
         // sign must be either * or / to need resultHelper
         switch (sign) {
             case '*':
@@ -176,7 +177,8 @@ public class Equation {
                 restoreResult(result, prev_result, prev_result_front_sign, rr);
                 break;
             default:
-                System.err.println("runtime error: sign must be either * or /");;
+                System.err.println("runtime error: sign must be either * or /");
+                ;
         }
     }
 
@@ -304,18 +306,31 @@ public class Equation {
     public String toCanonicalString() {
         StringBuilder res = new StringBuilder();
         int i = 0;
+        DecimalFormat df = new DecimalFormat("#.####");
+        df.setRoundingMode(RoundingMode.CEILING);
         for (Map.Entry<Set<Variable>, Float> entry : this.resultMap.entrySet()) {
             if (i != 0) {
                 if (entry.getValue() > 0) {
                     res.append('+');
                 }
             }
-            res.append(entry.getValue());
             Set<Variable> vars = entry.getKey();
+            if (entry.getValue() == -1f &&
+                    !vars.isEmpty()) {
+                res.append('-');
+            } else if (!entry.getValue().equals(1f)) {
+                // Control the precision to be printed
+
+                res.append(df.format(entry.getValue()));
+            }
+
             for (Variable v : vars) {
                 res.append(v.toString());
             }
             i += 1;
+        }
+        if (resultMap.isEmpty()) {
+            res.append('0');
         }
         res.append(" = 0");
         return res.toString();

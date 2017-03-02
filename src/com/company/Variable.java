@@ -1,7 +1,5 @@
 package com.company;
 
-import com.company.Exceptions.VariableFormatException;
-
 /**
  * Created by aor on 2017-02-27.
  */
@@ -51,7 +49,10 @@ public class Variable {
 
     @Override
     public String toString() {
-        return String.format("%s^%d ", this.base, this.degree);
+        if (this.degree == 1) {
+            return String.format("%s", this.base);
+        }
+        return String.format("%s^%d", this.base, this.degree);
     }
 
     public void setBase(Character base) {

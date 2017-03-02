@@ -20,7 +20,8 @@ public class EquationTest {
             eq_actual_multiply_3, eq_actual_multiply_4;
 
     Equation equation_expected_multiply_1, equation_expected_multiply_2,
-            equation_expected_multiply_3, equation_expected_multiply_4;
+            equation_expected_multiply_3, equation_expected_multiply_4,
+            eq_actual_multiply_5, equation_expected_multiply_5;
 
     @Before
     public void setUp() throws Exception {
@@ -40,11 +41,14 @@ public class EquationTest {
         eq_actual_multiply_2 = new Equation("-3.2x^2y + 2yx^2 = -3 * 45");
         eq_actual_multiply_3 = new Equation("(2z-3y)*(3x-2y)");
         eq_actual_multiply_4 = new Equation("3.5xy-(6y/3)*5z");
+        eq_actual_multiply_5 = new Equation("3.5xy + 2yx * 3y");
 
         equation_expected_multiply_1 = new Equation("-135");
         equation_expected_multiply_2 = new Equation("-1.2yx^2 + 135");
         equation_expected_multiply_3 = new Equation("6xz - 4yz - 9yx + 6y^2");
         equation_expected_multiply_4 = new Equation("3.5xy-10yz");
+        equation_expected_multiply_5 = new Equation("3.5yx + 6y^2x = 0");
+
     }
 
     @After
@@ -59,8 +63,8 @@ public class EquationTest {
                 eq_actual_3 = eq_actual_4 = null;
 
         equation_expected_multiply_1 = equation_expected_multiply_2 =
-                equation_expected_multiply_3 = equation_expected_multiply_4 = null;
-
+                equation_expected_multiply_3 = equation_expected_multiply_4 =
+                        eq_actual_multiply_5 = null;
     }
 
     @Test
@@ -105,8 +109,7 @@ public class EquationTest {
         Assert.assertEquals(eq_actual_multiply_2, equation_expected_multiply_2);
         Assert.assertEquals(eq_actual_multiply_3, equation_expected_multiply_3);
         Assert.assertEquals(eq_actual_multiply_4, equation_expected_multiply_4);
-        System.out.println(eq_actual_multiply_4);
-        System.out.println(equation_expected_multiply_4);
+        Assert.assertEquals(eq_actual_multiply_5, equation_expected_multiply_5);
     }
 
     @Test

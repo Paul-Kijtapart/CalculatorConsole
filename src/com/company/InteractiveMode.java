@@ -1,6 +1,5 @@
 package com.company;
 
-import com.company.Exceptions.EquationException;
 import com.company.Exceptions.EquationFormatException;
 import com.company.Exceptions.TermException;
 
@@ -14,8 +13,9 @@ import java.io.InputStreamReader;
 public class InteractiveMode {
 
     public InteractiveMode() {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("InteractiveMode started.");
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+        try {
             while (true) {
                 String line = null;
                 System.out.println("Please type a Math Equation or quit if you wish to exit");
@@ -29,13 +29,11 @@ public class InteractiveMode {
                 try {
                     eq = new Equation(line);
                 } catch (EquationFormatException e) {
-                    System.out.println("InteractiveMode : " + e.toString());
+                    System.out.println("InteractiveMode : " + e.getMessage());
                     continue;
                 } catch (TermException e) {
-                    System.out.println("InteractiveMode : " + e.toString());
+                    System.out.println("InteractiveMode : " + e.getMessage());
                     continue;
-                } catch (EquationException e) {
-                    System.out.println("InteractiveMode : " + e.toString());
                 }
 
                 System.out.println("Canonical From : " + eq.toCanonicalString());

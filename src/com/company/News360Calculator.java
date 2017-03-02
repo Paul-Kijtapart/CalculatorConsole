@@ -8,12 +8,15 @@ import java.io.InputStreamReader;
  * Created by aor on 2017-03-01.
  */
 public class News360Calculator {
+    private BufferedReader in;
 
     public News360Calculator() {
         System.out.println("There are two modes available.");
         System.out.println("Type 1 : Interactive Mode");
         System.out.println("Type 2 : File Mode");
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+
+        try {
+            in = new BufferedReader(new InputStreamReader(System.in));
             while (true) {
                 System.out.println("Please Enter Mode Number: ");
                 String line = null;
@@ -36,8 +39,8 @@ public class News360Calculator {
                 }
                 startMode(selectedMode);
             }
+            in.close();
         } catch (IOException e) {
-//            e.printStackTrace();
             System.out.println("News360Calculator : " + e.toString());
         }
     }
@@ -52,10 +55,10 @@ public class News360Calculator {
     private void startMode(Integer selectedMode) {
         switch (selectedMode) {
             case 1:
-                new InteractiveMode();
+               new InteractiveMode();
                 break;
             case 2:
-                new FileMode();
+
                 break;
             default:
                 System.out.println("Mode number : " + selectedMode + " is not available.");
