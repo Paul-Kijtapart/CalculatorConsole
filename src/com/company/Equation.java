@@ -22,6 +22,18 @@ public class Equation {
             throw new EquationFormatException("The given equation has unbalanced brackets.");
         }
         this.resultMap = compute(equation).termSumMap;
+        this.plusConstantToAllCoefficients(0f);
+        removeFromMapWithValue(this.resultMap, 0f);
+    }
+
+    /* Remove all Entry whose value equals to 0f */
+    public void removeFromMapWithValue(Map<Set<Variable>, Float> map, Float value) {
+        for(Iterator<Map.Entry<Set<Variable>, Float>> it = map.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<Set<Variable>, Float> entry = it.next();
+            if(entry.getValue().equals(value)) {
+                it.remove();
+            }
+        }
     }
 
     /**
@@ -43,7 +55,7 @@ public class Equation {
         Result left_canonical_form = computeHelper(left_side);
         Result right_canonical_form = computeHelper(right_side);
         right_canonical_form.multiplyByConstant(-1);
-        left_canonical_form.addTo(right_canonical_form);
+        left_canonical_form.plusTo(right_canonical_form);
         return left_canonical_form;
     }
 
@@ -71,28 +83,9 @@ public class Equation {
             } else if (Equation.isMathOperator(c)) {
                 if (start_cut_index != null && end_cut_index != null) {
                     term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
-                    switch (sign) {
-                        case '+':
-                            result.addTerm(term);
-                            break;
-                        case '-':
-                            term.multiplyConstant(-1);
-                            result.addTerm(term);
-                            break;
-                        case '*':
-                            prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
-                            result.removeTerm(prev_term);
-                            term.multiply(prev_term);
-                            result.addTerm(term);
-                            break;
-                        case '/':
-                            prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
-                            result.removeTerm(prev_term);
-                            term.dividedBy(prev_term);
-                            result.addTerm(term);
-                            break;
-                    }
+                    applyTermHelper(term, sign, prev_term, prev_sign, result);
                 }
+                // Reset
                 prev_term = term;
                 prev_sign = sign;
                 sign = c;
@@ -100,15 +93,26 @@ public class Equation {
                 start_cut_index = end_cut_index = null;
             } else if (isOpenBracket(c)) {
                 // Save Current result and Reset result and sign
+                result.sign = sign;
                 result_before_open_bracket_stack.push(result);
+
+                // Reset result, sign, and term local pointers
                 result = new Result();
                 sign = '+';
+                term = null;
                 start_cut_index = end_cut_index = null;
             } else if (isCloseBracket(c)) {
-                // Update Result
+                // Apply Term to Result
+                if (start_cut_index != null && end_cut_index != null) {
+                    term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
+                    applyTermHelper(term, sign, prev_term, prev_sign, result);
+                }
+                // Apply Before Result
                 Result front_result = result_before_open_bracket_stack.pop();
                 char front_sign = front_result.getSign();
                 result.operateWith(front_result, front_sign);
+
+                // Reset
                 sign = prev_sign = '+';
                 term = prev_term = null;
                 start_cut_index = end_cut_index = null;
@@ -117,33 +121,39 @@ public class Equation {
 
         if (start_cut_index != null && end_cut_index != null) {
             term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
-            switch (sign) {
-                case '+':
-                    result.addTerm(term);
-                    break;
-                case '-':
-                    term.multiplyConstant(-1);
-                    result.addTerm(term);
-                    break;
-                case '*':
-                    prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
-                    result.removeTerm(prev_term);
-                    term.multiply(prev_term);
-                    result.addTerm(term);
-                    break;
-                case '/':
-                    prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
-                    result.removeTerm(prev_term);
-                    term.dividedBy(prev_term);
-                    result.addTerm(term);
-                    break;
-            }
+            applyTermHelper(term, sign, prev_term, prev_sign, result);
         }
+
         return result;
     }
 
+    /* Update Result based on the previous Pair of Term and Sign */
+    public void applyTermHelper(Term term, char sign, Term prev_term, char prev_sign, Result result) throws TermException {
+        switch (sign) {
+            case '+':
+                result.addTerm(term);
+                break;
+            case '-':
+                term.multiplyConstant(-1);
+                result.addTerm(term);
+                break;
+            case '*':
+                prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
+                result.removeTerm(prev_term);
+                term.multiply(prev_term);
+                result.addTerm(term);
+                break;
+            case '/':
+                prev_term.multiplyConstant(prev_sign == '-' ? -1 : 1);
+                result.removeTerm(prev_term);
+                term.dividedBy(prev_term);
+                result.addTerm(term);
+                break;
+        }
+    }
+
     public static boolean hasValidInput(String s) {
-        Pattern invalid_pattern = Pattern.compile("[^0-9a-zA-Z\\^\\+\\-\\*\\/\\.\\s\\(\\)]");
+        Pattern invalid_pattern = Pattern.compile("[^0-9a-zA-Z\\^\\+\\-\\*\\/\\.\\s\\(\\)\\=]");
         Matcher matcher = invalid_pattern.matcher(s);
         while (matcher.find()) {
             System.err.println("illegal char found : " + matcher.group());
@@ -156,6 +166,16 @@ public class Equation {
         // TODO
         return true;
     }
+
+    /* Plus given num to the coefficient of all keys in resultMap*/
+    public void plusConstantToAllCoefficients(Float num) {
+        Set<Set<Variable>> keys = this.resultMap.keySet();
+        for (Set<Variable> k : keys) {
+            Float coefficient = resultMap.get(k);
+            resultMap.put(k, coefficient + num);
+        }
+    }
+
 
     private static boolean isCloseBracket(char c) {
         return (c == ')');
@@ -177,6 +197,22 @@ public class Equation {
         return ('.' == c);
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Equation equation = (Equation) o;
+
+        return resultMap != null ? resultMap.equals(equation.resultMap) : equation.resultMap == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return resultMap != null ? resultMap.hashCode() : 0;
+    }
+
     @Override
     public String toString() {
         return "Equation{" +
@@ -192,6 +228,8 @@ public class Equation {
         public Result() {
             this.sign = '+';
             this.termSumMap = new HashMap<>();
+            Set<Variable> constantKey = new HashSet<>();
+            termSumMap.put(constantKey, 0f);
         }
 
         public Result(Character sign) {
@@ -238,9 +276,10 @@ public class Equation {
 
         /**
          * Merge the Keys of both results and update corresponding coefficient (In-place)
+         *
          * @param resultTarget
          */
-        public void addTo(Result resultTarget) {
+        public void plusTo(Result resultTarget) {
             Map<Set<Variable>, Float> targetMap = resultTarget.termSumMap;
             for (Map.Entry<Set<Variable>, Float> entry : targetMap.entrySet()) {
                 Float coefficient = this.termSumMap.get(entry.getKey());
@@ -260,11 +299,11 @@ public class Equation {
             // Update this Result base on front sign
             switch (front_sign) {
                 case '+':
-                    this.addTo(front_result);
+                    this.plusTo(front_result);
                     break;
                 case '-':
                     this.multiplyByConstant(-1);
-                    this.addTo(front_result);
+                    this.plusTo(front_result);
                     break;
                 case '*':
                     break;

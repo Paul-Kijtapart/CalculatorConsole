@@ -47,6 +47,7 @@ public class Term {
         Variable v = Variable.getEmptyVariable();
         char[] chars = s.toCharArray();
         Float current_coefficient = 0f;
+        boolean foundDigit = false;
 
         for (int i = 0, N = chars.length; i < N; i++) {
             char c = chars[i];
@@ -58,6 +59,7 @@ public class Term {
                     precision *= 10;
                     current_coefficient = (10 * current_coefficient) + c - '0';
                 } else {
+                    foundDigit = true;
                     current_coefficient = (10 * current_coefficient) + c - '0';
                 }
             } else if (isTermSymbol(c)) {
@@ -72,18 +74,22 @@ public class Term {
                     v.setEmpty();
                 }
                 v.setBase(c);
-                if (current_coefficient == 0) {
+                if (current_coefficient == 0 && !foundDigit) {
                     current_coefficient = 1f;
                 }
+                foundDigit = false;
                 res.multiplyCoefficientBy(current_coefficient / precision);
                 current_coefficient = 0f;
                 precision = 1;
             }
         }
-
-        if (res.hasEmptyBaseToDegreeMap() && current_coefficient > 1f) {
+        if (res.hasEmptyBaseToDegreeMap() && foundDigit) {
             // This Term is a Constant
-            res.multiplyCoefficientBy(current_coefficient / precision);
+            if (current_coefficient == 0f) {
+                res.coefficient = 0f;
+            } else {
+                res.multiplyCoefficientBy(current_coefficient / precision);
+            }
         } else if (v.getBase() != null) {
             // Add Variables to the Term set
             if (v.getDegree() == 0) {
@@ -205,7 +211,7 @@ public class Term {
     @Override
     public String toString() {
         return "Term{ " + Float.toString(this.coefficient) +
-                " variablesSet=" + variablesSet +
+                " " + variablesSet +
                 '}';
     }
 

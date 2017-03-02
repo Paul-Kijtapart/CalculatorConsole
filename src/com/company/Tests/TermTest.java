@@ -19,8 +19,12 @@ public class TermTest {
             term10, term11, term12,
             term13, term14, term15;
 
+    Term zero_term_1;
+
     Term constant1, constant2, constant3,
-            constant4, constant5, constant6;
+            constant4, constant5, constant6,
+            zero_constant_1, zero_constant_2;
+
 
     @Before
     public void setUp() throws Exception {
@@ -45,7 +49,10 @@ public class TermTest {
         term13 = new Term("6yx^3z");
 
         // Constants multiply with term
-        term14 = new Term("2xy");
+        term14 = new Term("2yx");
+
+        // Term with coefficnet = 0
+        zero_term_1 = new Term("0xyz");
 
         // Constants
         constant1 = new Term("1 2 345");
@@ -54,6 +61,8 @@ public class TermTest {
         constant4 = new Term("6.9");
         constant5 = new Term("12348.45");
         constant6 = new Term("12348.45");
+        zero_constant_1 = new Term(" 0000.0 0 0 ");
+        zero_constant_2 = new Term("0");
     }
 
     @After
@@ -64,8 +73,11 @@ public class TermTest {
                                 term10 = term11 = term12 =
                                         term13 = term14 = term15 =
                                                 null;
+        zero_term_1 = null;
+
         constant1 = constant2 = constant3 =
-                constant4 = constant5 = constant6 = null;
+                constant4 = constant5 = constant6 =
+                        zero_constant_1 = zero_constant_2 = null;
     }
 
     @Test
@@ -80,6 +92,9 @@ public class TermTest {
         Assert.assertTrue(Term.isValidInput("2xy3zxx"));
         Assert.assertTrue(Term.isValidInput("1 2 345"));
         Assert.assertTrue(Term.isValidInput("3. 4 5"));
+        Assert.assertTrue(Term.isValidInput(" 0000.0 0 0 "));
+        Assert.assertTrue(Term.isValidInput("0"));
+        Assert.assertTrue(Term.isValidInput("0yx"));
     }
 
 
@@ -92,6 +107,8 @@ public class TermTest {
         Assert.assertFalse(term8.equals(term9));
         Assert.assertTrue(term12.equals(term13));
         Assert.assertTrue(constant5.equals(constant6));
+        Assert.assertEquals(zero_constant_1, zero_constant_2);
+        Assert.assertNotEquals(zero_term_1, term2);
     }
 
 
@@ -105,8 +122,9 @@ public class TermTest {
         Assert.assertEquals(term12.getCoefficient(), 6f);
         Assert.assertEquals(constant1.getCoefficient(), 12345f);
         Assert.assertEquals(constant2.getCoefficient(), 3.45f);
-        ;
         Assert.assertEquals(constant5.getCoefficient(), 12348.45f);
+        Assert.assertEquals(zero_constant_1.getCoefficient(), 0f);
+        Assert.assertEquals(zero_term_1.getCoefficient(), 0f);
     }
 
 
@@ -121,12 +139,12 @@ public class TermTest {
         Assert.assertEquals(term5.plus(term7), term11);
         Assert.assertEquals(constant1.plus(constant2), constant5, "constant plus");
         Assert.assertNull(constant1.plus(term1));
+        Assert.assertNull(zero_constant_1.plus(zero_term_1));
     }
 
     @Test
     public void testMinus() throws Exception {
         Assert.assertEquals(term3.minus(term2), term1, "test cf: 4.5 -1 = 3.5");
-        System.out.println(term3);
         Assert.assertNotNull(term2.minus(term1), "xy - yx = term with cf = 0");
         Assert.assertEquals(term2.minus(term6).getCoefficient(), 0f, " xy - yx = term with cf = 0");
         Assert.assertEquals(term6.minus(term1).getCoefficient(), -2.5f, "yx - 3.5xy = -2.5xy");

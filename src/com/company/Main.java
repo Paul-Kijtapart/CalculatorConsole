@@ -32,17 +32,29 @@ public class Main {
 //        }
 
 
-        try {
-            Equation e1 = new Equation("3.5xy + ( yx - xy ) - 2.12y");
-            Equation e2 = new Equation("3.5x + x");
-            System.out.println(e2);
-            System.out.println(e1.toString());
-        } catch (EquationFormatException e) {
-            e.printStackTrace();
-        } catch (TermException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Equation e1 = new Equation("3.5xy + ( yx - xy ) - 2.12y");
+////            Equation e2 = new Equation("3.5x + x");
+////            System.out.println(e2);
+//            System.out.println(e1.toString());
+//        } catch (EquationFormatException e) {
+//            e.printStackTrace();
+//        } catch (TermException e) {
+//            e.printStackTrace();
+//        }
 
 
+        Float f1 = 0.0f;
+        Float f2 = 0f;
+        Float f3 = -0.0f;
+        Float f4 = -0f;
+        System.out.println(f1.equals(f2));
+        System.out.println(f2.equals(f4+0f));
+        System.out.println(f1.equals(f3+0f));
+        System.out.println(f1.equals(f4+0f));
+
+//        System.out.println(f1.compareTo(f2) == 0);
+//        System.out.println(f1.compareTo(f3 + 0f) == 0);
+//        System.out.println(f1.compareTo(f4 + 0f) == 0);
     }
 }
