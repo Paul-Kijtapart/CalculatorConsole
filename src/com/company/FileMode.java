@@ -15,9 +15,11 @@ public class FileMode {
         for (String fn : fileNames) {
             parseFile(fn);
         }
+        System.out.println("Exit FileMode");
     }
 
     private void parseFile(String fileName) {
+        System.out.println("Processing " + fileName);
         File file = new File(fileName);
         File outFile = new File(fileName + ".out");
         BufferedReader in = null;
@@ -41,14 +43,13 @@ public class FileMode {
             }
             System.out.println("Finish writing to file : " + outFile.toString());
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.out.println("File Mode : " + e.toString());
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("File Mode : " + e.toString());
         } finally {
-            System.out.println("Exit FileMode");
             try {
-                in.close();
-                out.close();
+                if (in != null) in.close();
+                if (out != null) out.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
