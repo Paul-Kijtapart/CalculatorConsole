@@ -45,14 +45,14 @@ public class VariableTest {
 
     @Test
     public void testAppendDegree() throws Exception {
-        Assert.assertTrue(variable_1.getDegree() == 0);
-        Assert.assertTrue(variable_2.getDegree() == 0);
+        Assert.assertNull(variable_1.getDegree());
+        Assert.assertNull(variable_2.getDegree());
         Assert.assertTrue(variable_5.getDegree() == 13);
         variable_1.appendDegree('1');
         variable_2.appendDegree('c');
         variable_5.appendDegree('1');
         Assert.assertTrue(variable_1.getDegree() == 1);
-        Assert.assertTrue(variable_2.getDegree() == 0);
+        Assert.assertNull(variable_2.getDegree(), "expected var2 to have same degree after");
         Assert.assertTrue(variable_5.getDegree() == 131);
     }
 }
