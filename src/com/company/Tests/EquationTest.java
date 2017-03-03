@@ -23,6 +23,12 @@ public class EquationTest {
             equation_expected_multiply_3, equation_expected_multiply_4,
             eq_actual_multiply_5, equation_expected_multiply_5;
 
+    Equation eq_division_actual_1, eq_division_actual_2,
+            eq_division_expected_1, eq_division_expected_2;
+
+    Equation eq_complex, eq_complex_expected;
+
+
     @Before
     public void setUp() throws Exception {
         eq_actual_1 = new Equation("3.5xy + ( yx - xy ) - 2.12y");
@@ -49,6 +55,15 @@ public class EquationTest {
         equation_expected_multiply_4 = new Equation("3.5xy-10yz");
         equation_expected_multiply_5 = new Equation("3.5yx + 6y^2x = 0");
 
+        eq_division_actual_1 = new Equation("(2x+3y)/2y");
+        eq_division_actual_2 = new Equation("(3y/2)*4");
+
+        eq_division_expected_1 = new Equation("xy+1.5");
+        eq_division_expected_2 = new Equation("6y");
+
+        eq_complex = new Equation("(2x+3y)/2y*12");
+        eq_complex_expected = new Equation("");
+
     }
 
     @After
@@ -65,6 +80,11 @@ public class EquationTest {
         equation_expected_multiply_1 = equation_expected_multiply_2 =
                 equation_expected_multiply_3 = equation_expected_multiply_4 =
                         eq_actual_multiply_5 = null;
+
+        eq_division_actual_1 = eq_division_actual_2 =
+                eq_division_expected_1 = eq_division_expected_2 = null;
+
+        eq_complex = eq_complex_expected = null;
     }
 
     @Test
@@ -110,6 +130,10 @@ public class EquationTest {
         Assert.assertEquals(eq_actual_multiply_3, equation_expected_multiply_3);
         Assert.assertEquals(eq_actual_multiply_4, equation_expected_multiply_4);
         Assert.assertEquals(eq_actual_multiply_5, equation_expected_multiply_5);
+
+        System.out.println(eq_division_actual_1);
+        System.out.println(eq_division_expected_1);
+        Assert.assertEquals(eq_division_actual_2, eq_division_expected_2);
     }
 
     @Test

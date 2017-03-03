@@ -18,7 +18,7 @@ public class InteractiveMode {
         try {
             while (true) {
                 String line = null;
-                System.out.println("Please type a Math Equation or quit if you wish to exit");
+                System.out.println("Please type a Math Equation.");
                 line = in.readLine();
                 Equation eq = null;
                 try {
