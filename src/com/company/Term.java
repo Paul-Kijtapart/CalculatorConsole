@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
  * Created by aor on 2017-02-27.
  */
 public class Term {
-    protected Set<Variable> variablesSet;
+    protected TermVariables termVariables;
     protected Float coefficient;
     protected Map<Character, Integer> baseToDegreeMap;
 
@@ -24,27 +24,28 @@ public class Term {
         this.coefficient = coefficientAndBaseToDegreeMap.getCoefficient();
         this.baseToDegreeMap = coefficientAndBaseToDegreeMap.getBase_to_degree_map();
 
-        this.variablesSet = new HashSet<>();
+        this.termVariables = new TermVariables();
+
         for (Map.Entry<Character, Integer> entry : baseToDegreeMap.entrySet()) {
             Variable v = new Variable(entry.getKey(), entry.getValue());
-            this.variablesSet.add(v);
+            termVariables.add(v);
         }
-        removeVariableWithDegreeZero(variablesSet);
+        removeVariableWithDegreeZero(termVariables.getVariables());
     }
 
-    /* Return a Copy of given Term t */
+    /* Return a Deep Copy of given Term t */
     public Term(Term t) {
-        this.variablesSet = new HashSet<>();
-        variablesSet.addAll(t.getVariablesSet());
+        this.termVariables = new TermVariables(t.getTermVariables());
         this.coefficient = new Float(t.getCoefficient());
         this.baseToDegreeMap = new HashMap<>();
         baseToDegreeMap.putAll(t.getBaseToDegreeMap());
     }
 
+    /* Create a shallow Copy*/
     public Term(Float coefficient, Set<Variable> variables) {
         this.coefficient = coefficient;
-        this.variablesSet = variables;
-        this.baseToDegreeMap = buildBaseToDegreeMap(this.variablesSet);
+        this.termVariables = new TermVariables(variables);
+        this.baseToDegreeMap = buildBaseToDegreeMap(this.termVariables.getVariables());
     }
 
     private Map<Character, Integer> buildBaseToDegreeMap(Set<Variable> variablesSet) {
@@ -160,7 +161,7 @@ public class Term {
 
     public Term plus(Term term_2) throws TermException {
         Term res = new Term(this);
-        if (!res.getVariablesSet().equals(term_2.getVariablesSet())) {
+        if (!res.getTermVariables().equals(term_2.getTermVariables())) {
             return null;
         }
         res.setCoefficient(res.getCoefficient() + term_2.getCoefficient());
@@ -169,7 +170,7 @@ public class Term {
 
     public Term minus(Term term_2) throws TermException {
         Term res = new Term(this);
-        if (!res.getVariablesSet().equals(term_2.getVariablesSet())) {
+        if (!res.getTermVariables().equals(term_2.getTermVariables())) {
             return null;
         }
         res.setCoefficient(res.getCoefficient() - term_2.getCoefficient());
@@ -177,7 +178,7 @@ public class Term {
     }
 
     public boolean isTermConstant() {
-        return (this.baseToDegreeMap.isEmpty() && this.variablesSet.isEmpty());
+        return (this.baseToDegreeMap.isEmpty() && this.termVariables.isEmpty());
     }
 
     /* Multiply the Coefficient of this Term by num (In-Place) */
@@ -208,8 +209,8 @@ public class Term {
                 res_map.put(entry.getKey(), power + entry.getValue());
             }
         }
-        res.variablesSet.clear();
-        loadSetVariablesFromMap(res_map, res.variablesSet);
+        res.termVariables.clear();
+        loadSetVariablesFromMap(res_map, res.termVariables.getVariables());
         return res;
     }
 
@@ -234,8 +235,8 @@ public class Term {
                 res_map.put(entry.getKey(), power - entry.getValue());
             }
         }
-        res.variablesSet.clear();
-        loadSetVariablesFromMap(res_map, res.variablesSet);
+        res.termVariables.clear();
+        loadSetVariablesFromMap(res_map, res.termVariables.getVariables());
         return res;
     }
 
@@ -266,8 +267,8 @@ public class Term {
         return this.coefficient;
     }
 
-    public Set<Variable> getVariablesSet() {
-        return variablesSet;
+    public TermVariables getTermVariables() {
+        return termVariables;
     }
 
     public void setCoefficient(Float coefficient) {
@@ -275,10 +276,86 @@ public class Term {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Term term = (Term) o;
+
+        if (termVariables != null ? !termVariables.equals(term.termVariables) : term.termVariables != null)
+            return false;
+        return coefficient != null ? coefficient.equals(term.coefficient) : term.coefficient == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = termVariables != null ? termVariables.hashCode() : 0;
+        result = 31 * result + (coefficient != null ? coefficient.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
-        return "Term{ " + Float.toString(this.coefficient) +
-                " " + variablesSet +
-                '}';
+        return  Float.toString(this.coefficient) + this.termVariables.toString();
+    }
+
+    // Holding all variables that a term has
+    class TermVariables {
+        private Set<Variable> variables;
+
+        public TermVariables() {
+            this.variables = new HashSet<>();
+        }
+
+        public TermVariables(Set<Variable> variableSet) {
+            this.variables = variableSet;
+        }
+
+        /* Return a Deep Copy of given termVariables*/
+        public TermVariables(TermVariables termVariables) {
+            this.variables = new HashSet<>(termVariables.getVariables());
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            for (Variable v : this.variables) {
+                sb.append(v.toString());
+            }
+            return sb.toString();
+        }
+
+        public Set<Variable> getVariables() {
+            return variables;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TermVariables that = (TermVariables) o;
+
+            return variables != null ? variables.equals(that.variables) : that.variables == null;
+        }
+
+        @Override
+        public int hashCode() {
+            return variables != null ? variables.hashCode() : 0;
+        }
+
+        public void add(Variable v) {
+            this.variables.add(v);
+        }
+
+        public boolean isEmpty() {
+            return this.variables.isEmpty();
+        }
+
+        public void clear() {
+            this.variables.clear();
+        }
     }
 
     /* Store Coefficient and Map of Base to Degree of all variablesSet this Term contains */
@@ -315,24 +392,5 @@ public class Term {
         public Map<Character, Integer> getBase_to_degree_map() {
             return base_to_degree_map;
         }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Term term = (Term) o;
-
-        if (variablesSet != null ? !variablesSet.equals(term.variablesSet) : term.variablesSet != null) return false;
-        return coefficient != null ? coefficient.equals(term.coefficient) : term.coefficient == null;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = variablesSet != null ? variablesSet.hashCode() : 0;
-        result = 31 * result + (coefficient != null ? coefficient.hashCode() : 0);
-        return result;
     }
 }

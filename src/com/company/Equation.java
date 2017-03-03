@@ -376,14 +376,14 @@ public class Equation {
         /* Plus the values of this result by the given term */
         public void addTerm(Term term) {
             float coefficient = term.getCoefficient();
-            Set<Variable> vars = term.getVariablesSet();
+            Set<Variable> vars = term.getTermVariables().getVariables();
             addToTermSum(vars, coefficient);
         }
 
         /* Minus the values of this result by the given term*/
         public void removeTerm(Term term) {
             float coefficient = term.getCoefficient();
-            Set<Variable> vars = term.getVariablesSet();
+            Set<Variable> vars = term.getTermVariables().getVariables();
             removeFromTermSum(vars, coefficient);
         }
 

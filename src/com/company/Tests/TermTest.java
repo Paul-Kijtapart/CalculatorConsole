@@ -126,20 +126,20 @@ public class TermTest {
 
     @Test
     public void testGetCoefficient() throws Exception {
-//        Assert.assertEquals(term1.getCoefficient(), 3.5f);
-//        Assert.assertEquals(term2.getCoefficient(), 1f);
-//        Assert.assertEquals(term3.getCoefficient(), 4.5f);
-//        Assert.assertEquals(term4.getCoefficient(), 1f);
-//        Assert.assertEquals(term5.getCoefficient(), 30f);
-//        Assert.assertEquals(term12.getCoefficient(), 6f);
-//        Assert.assertEquals(constant1.getCoefficient(), 12345f);
-//        Assert.assertEquals(constant2.getCoefficient(), 3.45f);
-//        Assert.assertEquals(constant5.getCoefficient(), 12348.45f);
-//        Assert.assertEquals(zero_constant_1.getCoefficient(), 0f);
-//        Assert.assertEquals(zero_term_1.getCoefficient(), 0f);
+        Assert.assertEquals(term1.getCoefficient(), 3.5f);
+        Assert.assertEquals(term2.getCoefficient(), 1f);
+        Assert.assertEquals(term3.getCoefficient(), 4.5f);
+        Assert.assertEquals(term4.getCoefficient(), 1f);
+        Assert.assertEquals(term5.getCoefficient(), 30f);
+        Assert.assertEquals(term12.getCoefficient(), 6f);
+        Assert.assertEquals(constant1.getCoefficient(), 12345f);
+        Assert.assertEquals(constant2.getCoefficient(), 3.45f);
+        Assert.assertEquals(constant5.getCoefficient(), 12348.45f);
+        Assert.assertEquals(zero_constant_1.getCoefficient(), 0f);
+        Assert.assertEquals(zero_term_1.getCoefficient(), 0f);
         Assert.assertEquals(num_with_power_1.getCoefficient(), 16f);
         Assert.assertEquals(num_with_power_2.getCoefficient(),36f);
-//        Assert.assertEquals(term_with_degree_zero.getCoefficient(), 14f);
+        Assert.assertEquals(term_with_degree_zero.getCoefficient(), 14f);
     }
 
 
