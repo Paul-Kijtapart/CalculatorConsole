@@ -58,42 +58,31 @@ public class Equation {
             throw new EquationFormatException("There can be at most one equal sign.");
         }
         if (segments.length == 1) {
-            return computeHelper(segments[0]);
+            return computeHelper2(segments[0]);
         }
         String left_side = segments[0];
         String right_side = segments[1];
-        Result left_canonical_form = computeHelper(left_side);
-        Result right_canonical_form = computeHelper(right_side);
+        Result left_canonical_form = computeHelper2(left_side);
+        Result right_canonical_form = computeHelper2(right_side);
         right_canonical_form.multiplyByConstant(-1);
         left_canonical_form.plusTo(right_canonical_form);
         return left_canonical_form;
     }
 
-    /**
-     * Precondition: the given equation is valid
-     *
-     * @param equation
-     * @return Result that contains only the terms to be sum later
-     * @throws TermException
-     */
-    private Result computeHelper(String equation) throws TermException, EquationFormatException {
+    private Result computeHelper2(String equation) throws TermException {
         char[] chars = equation.toCharArray();
-        Term term = null;
-        Integer start_cut_index = null, end_cut_index = null;
         Result result = new Result();
+        Character sign = '+';
+        Integer start_cut_index = null, end_cut_index = null;
         Stack<Result> result_before_open_bracket_stack = new Stack<>();
-        Term prev_term = null;      // To be used with 2x/3y
-        Result prev_result = null;  // To be used with (2x+3y)*5z
-        Character prev_result_front_sign = null;
-        boolean multiply_div_result_flag = false;
-        char sign = '+';
+        Result prev_result = new Result();
+        char prev_sign = '+';
 
         for (int i = 0, N = chars.length; i < N; i++) {
             char c = chars[i];
             if (Character.isDigit(c) ||
                     Equation.isPowerSymbol(c) || Equation.isDotSymbol(c) ||
-                    Character.isLetter(c)) {
-                // Identify the segment to be parsed to Term
+                    Character.isLetter(c) || (Equation.isMathOperator(c) && i - 1 >= 0 && Equation.isPowerSymbol(chars[i - 1]))) {
                 if (start_cut_index == null) {
                     start_cut_index = i;
                     end_cut_index = start_cut_index;
@@ -101,131 +90,129 @@ public class Equation {
                     end_cut_index = i;
                 }
             } else if (Equation.isMathOperator(c)) {
-                // Create a term from the selected segment and apply to Result
-                if (start_cut_index != null && end_cut_index != null) {
-                    term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
-                    if (prev_result != null && prev_result_front_sign != null && multiply_div_result_flag) {
-                        applyResultHelper(term, sign, prev_result, prev_result_front_sign, result);
-                        prev_result = null;
-                        prev_result_front_sign = null;
-                        multiply_div_result_flag = false;
-                    } else {
-                        applyTermHelper(term, sign, prev_term, result);
-                    }
-                } else if ((c == '*' || c == '/') && i + 1 < N && !isOpenBracket(chars[i + 1])
-                        && prev_result != null && prev_result_front_sign != null) {
-                    multiply_div_result_flag = true;
+                if (start_cut_index == null || end_cut_index == null) {
+                    sign = c;
+                    continue;
                 }
+                // Apply TempResult to Result
+                applyTempResult(start_cut_index, end_cut_index, equation,
+                        sign, prev_result, prev_sign, result);
 
-                // Reset term
-                prev_term = term;
+                // Update and Reset pointers
+                prev_sign = sign;
                 sign = c;
-                term = null;
                 start_cut_index = end_cut_index = null;
             } else if (isOpenBracket(c)) {
                 // Save Current result and the sign before this open bracket
                 result.sign = sign;
                 result_before_open_bracket_stack.push(result);
 
-                // Reset result, sign, and term local pointers
+                // Update and Reset pointers
+                prev_result = new Result();
+                prev_sign = '+';
                 result = new Result();
                 sign = '+';
-                term = null;
                 start_cut_index = end_cut_index = null;
             } else if (isCloseBracket(c)) {
-                // Apply Term to Result
+                // Apply TempResult to final Result
                 if (start_cut_index != null && end_cut_index != null) {
-                    term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
-                    applyTermHelper(term, sign, prev_term, result);
+                    applyTempResult(start_cut_index, end_cut_index, equation,
+                            sign, prev_result, prev_sign, result);
                 }
 
-                // Apply Before Result
+                // Apply Result before open brackets to final result
                 Result front_result = result_before_open_bracket_stack.pop();
-                char front_sign = front_result.getSign();
+                char front_sign = front_result.sign;
+
+                // prev_result is now set to () right after FR * (), where * = front_sign
+                // and FR is front_result
                 prev_result = new Result(result);
-                prev_result_front_sign = front_sign;
+                prev_sign = front_sign;
+
                 result.operateWithResultAtOpenBracket(front_result, front_sign);
 
-                // Reset
+                // Update and Reset
                 sign = '+';
-                term = prev_term = null;
                 start_cut_index = end_cut_index = null;
             }
         }
 
         if (start_cut_index != null && end_cut_index != null) {
-            term = new Term(equation.substring(start_cut_index, end_cut_index + 1));
-            if (prev_result != null && multiply_div_result_flag) {
-                applyResultHelper(term, sign, prev_result, prev_result_front_sign, result);
-            } else {
-                applyTermHelper(term, sign, prev_term, result);
-            }
+            applyTempResult(start_cut_index, end_cut_index, equation,
+                    sign, prev_result, prev_sign, result);
         }
-
         return result;
     }
 
-    private void applyResultHelper(Term term, char sign, Result prev_result, Character prev_result_front_sign, Result result) throws TermException {
-        // sign must be either * or / to need resultHelper
+
+    /* Looking at one sign and one result at a time:
+    * Eg: 3.5xy-2y, this function would trigger when index is at 5 when char c == '-'
+    * we would be looking at 3.5xy with sign = '+'
+    * if sign is '+', we are able to add this result(3.5xy) to the total result
+    * */
+    public void applyTempResult(int start_cut_index, int end_cut_index, String equation,
+                                char sign, Result prev_result, Character prev_sign, Result result) throws TermException {
+        // Get TempResult based on current cut-term
+        Result tempResult = new Result(new Term(equation.substring(start_cut_index, end_cut_index + 1)));
+        Result product = null;
         switch (sign) {
+            case '-':
+                prev_result.setResult(new Result(tempResult));
+                tempResult.multiplyByConstant(-1);
+                result.plusTo(tempResult);
+                break;
+            case '+':
+                prev_result.setResult(tempResult);
+                result.plusTo(tempResult);
+                break;
             case '*':
-                Result replaced_result = prev_result.multiplyTerm(term);
-                restoreResult(result, prev_result, prev_result_front_sign, replaced_result);
+                // Take PR out of R
+                removePreviouslyMergedResult(prev_result, prev_sign, result);
+
+                // Apply new product to R
+                product = prev_result.multiply(tempResult);
+                result.operateWith(product, prev_sign);
+
+                // No Change to prev_sign
+                prev_result.setResult(new Result(result));
                 break;
             case '/':
-                Result rr = prev_result.divideByTerm(term);
-                restoreResult(result, prev_result, prev_result_front_sign, rr);
+                // Take PR out of R
+                removePreviouslyMergedResult(prev_result, prev_sign, result);
+                // Apply new product to R
+                product = prev_result.divideBy(tempResult);
+                result.operateWith(product, prev_sign);
+
+                // No Change to prev_sign
+                prev_result.setResult(new Result(result));
                 break;
-            default:
-                System.err.println("runtime error: sign must be either * or /");
-                ;
         }
     }
 
-    private void restoreResult(Result result, Result prev_result, Character prev_result_front_sign, Result replaced_result) throws TermException {
-        switch (prev_result_front_sign) {
+    /*  Negate the effect of prev_result from Result.
+        Eg: initially we have result - prev_result * ..., where '-' is prev_sign
+        to negate the effect of prev_result: result = result + prev_result
+        Eg2: result * prev_result * ... can be negated by result = result / prev_result
+    * */
+
+    private void removePreviouslyMergedResult(Result prev_result, char prev_sign, Result result) throws TermException {
+        Result result_without_pr = null;
+        switch (prev_sign) {
             case '+':
                 prev_result.multiplyByConstant(-1);
                 result.plusTo(prev_result);
-                result.plusTo(replaced_result);
+                prev_result.multiplyByConstant(-1);
                 break;
             case '-':
                 result.plusTo(prev_result);
-                replaced_result.multiplyByConstant(-1);
-                result.plusTo(replaced_result);
                 break;
             case '*':
-                Result temp = result.divideBy(prev_result);
-                temp = temp.multiply(replaced_result);
-                result.setResult(temp);
+                result_without_pr = result.divideBy(prev_result);
+                result.setResult(result_without_pr);
                 break;
             case '/':
-                Result temp2 = result.multiply(prev_result);
-                temp2 = temp2.divideBy(replaced_result);
-                replaced_result.setResult(temp2);
-                break;
-        }
-    }
-
-    /* Update Result based on the previous Pair of Term and Sign */
-    public void applyTermHelper(Term term, char sign, Term prev_term, Result result) throws TermException {
-        switch (sign) {
-            case '+':
-                result.addTerm(term);
-                break;
-            case '-':
-                term.multiplyConstant(-1);
-                result.addTerm(term);
-                break;
-            case '*':
-                result.removeTerm(prev_term);
-                term = term.multiply(prev_term);
-                result.addTerm(term);
-                break;
-            case '/':
-                result.removeTerm(prev_term);
-                prev_term = prev_term.dividedBy(term);
-                result.addTerm(prev_term);
+                result_without_pr = result.multiply(prev_result);
+                result.setResult(result_without_pr);
                 break;
         }
     }
@@ -373,6 +360,13 @@ public class Equation {
             this.sign = result.sign;
         }
 
+        /* Wrap term */
+        public Result(Term term) {
+            this.sign = '+';
+            this.termSumMap = new HashMap<>();
+            termSumMap.put(term.getTermVariables().getVariables(), term.getCoefficient());
+        }
+
         /* Plus the values of this result by the given term */
         public void addTerm(Term term) {
             float coefficient = term.getCoefficient();
@@ -437,13 +431,9 @@ public class Equation {
             return sign;
         }
 
-        /**
-         * perform Math operation against front_result based on given front_sign
-         *
-         * @param front_result - is one of '+', '-', '*', '/'
-         * @param front_sign   - the result to perform math operation on
-         * @throws TermException
-         */
+       /* The format : front_result front_sign this
+        * Eg: FR * (this), where * = is front_sign and FR is front_result
+         * */
         public void operateWithResultAtOpenBracket(Result front_result, char front_sign) throws TermException {
             // Update this Result base on front sign
             switch (front_sign) {
@@ -459,11 +449,32 @@ public class Equation {
                     this.setResult(product);
                     break;
                 case '/':
-                    Result division = this.divideBy(front_result);
+                    Result division = front_result.divideBy(this);
                     this.setResult(division);
                     break;
                 default:
                     System.err.println("Unrecognized sign to operate with Equation Result.");
+            }
+        }
+
+        // check: probe re-place above: this sign result eg this - result, this * result
+        public void operateWith(Result result, char sign) throws TermException {
+            switch (sign) {
+                case '+':
+                    this.plusTo(result);
+                    break;
+                case '-':
+                    result.multiplyByConstant(-1);
+                    this.plusTo(result);
+                    break;
+                case '*':
+                    Result product = this.multiply(result);
+                    this.setResult(product);
+                    break;
+                case '/':
+                    Result division = this.divideBy(result);
+                    this.setResult(division);
+                    break;
             }
         }
 

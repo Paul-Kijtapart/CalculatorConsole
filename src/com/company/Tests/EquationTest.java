@@ -125,14 +125,11 @@ public class EquationTest {
         Assert.assertEquals(eq_actual_3, eq_expected_3);
         Assert.assertEquals(eq_actual_4, eq_expected_4);
         Assert.assertEquals(eq_actual_5, eq_expected_5);
-        Assert.assertEquals(eq_actual_multiply_1, equation_expected_multiply_1);
+        Assert.assertEquals(equation_expected_multiply_1, eq_actual_multiply_1);
         Assert.assertEquals(eq_actual_multiply_2, equation_expected_multiply_2);
         Assert.assertEquals(eq_actual_multiply_3, equation_expected_multiply_3);
-        Assert.assertEquals(eq_actual_multiply_4, equation_expected_multiply_4);
+        Assert.assertEquals(equation_expected_multiply_4, eq_actual_multiply_4);
         Assert.assertEquals(eq_actual_multiply_5, equation_expected_multiply_5);
-
-        System.out.println(eq_division_actual_1);
-        System.out.println(eq_division_expected_1);
         Assert.assertEquals(eq_division_actual_2, eq_division_expected_2);
     }
 
