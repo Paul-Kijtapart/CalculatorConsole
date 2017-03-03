@@ -39,6 +39,7 @@ public class FileMode {
                     e.printStackTrace();
                 }
             }
+            System.out.println("Finish writing to file : " + outFile.toString());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
