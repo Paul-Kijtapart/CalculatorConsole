@@ -12,7 +12,7 @@ The equation will be given in the following form: P1 + P2 + ... = ... + PN
 2. you can also pass multiple file names separated by whiteSpace.
 3. each file name passed to the mode will generate the sameFileName.out
 
-Examples:
+## Examples:
 ```
 "x^2 + 3.5xy + y = y^2 - xy + y"  =>  "x^2 - y^2 + 4.5xy = 0"
 "x = 1"                           =>  "x - 1 = 0"
